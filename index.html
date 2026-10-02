@@ -21,13 +21,6 @@
   #title { font-size: 12px; letter-spacing: 4px; opacity: 0.6; }
   #hint { font-size: 10px; opacity: 0.5; text-align: center; }
 
-  #debug {
-    position: fixed; top: 50px; left: 10px;
-    color: #0f0; font-size: 10px; font-family: monospace;
-    background: rgba(0,0,0,0.7); padding: 4px 6px; border-radius: 4px;
-    pointer-events: none; z-index: 100; line-height: 1.4; display: none;
-  }
-
   #moveZone {
     position: fixed; left: 0; top: 0; width: 50%; height: 100%;
     pointer-events: auto; z-index: 10; touch-action: none;
@@ -50,25 +43,28 @@
     box-shadow: 0 0 20px rgba(255,0,0,0.6);
   }
 
+  #btnStack {
+    position: fixed; right: 20px; bottom: 20px;
+    display: flex; flex-direction: column; gap: 12px;
+    align-items: center; z-index: 20;
+  }
+
   #actionBtn {
-    position: fixed; right: 25px; bottom: 130px;
     width: 75px; height: 75px; border-radius: 50%;
     background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4);
     color: #ff3333; font-size: 11px; letter-spacing: 2px;
     display: flex; align-items: center; justify-content: center;
-    pointer-events: auto; touch-action: none; opacity: 0.7;
-    text-shadow: 0 0 8px #ff0000; z-index: 20;
+    pointer-events: auto; touch-action: none; opacity: 0.8;
+    text-shadow: 0 0 8px #ff0000;
   }
   #actionBtn:active { background: rgba(255,0,0,0.5); opacity: 1; }
 
   #lightBtn {
-    position: fixed; right: 25px; bottom: 220px;
     width: 60px; height: 60px; border-radius: 50%;
     background: rgba(255,200,0,0.15); border: 2px solid rgba(255,200,0,0.4);
-    color: #ffcc33; font-size: 20px;
+    color: #ffcc33; font-size: 22px;
     display: flex; align-items: center; justify-content: center;
     pointer-events: auto; touch-action: none; opacity: 0.7;
-    z-index: 20;
   }
   #lightBtn:active { background: rgba(255,200,0,0.5); opacity: 1; }
   #lightBtn.on { background: rgba(255,200,0,0.5); }
@@ -122,7 +118,7 @@
   #note h3 { color: #ff3333; margin-bottom: 12px; font-size: 16px; letter-spacing: 3px; }
 
   #interact {
-    position: fixed; bottom: 220px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
     color: #ff8888; font-size: 13px; letter-spacing: 2px;
     text-shadow: 0 0 10px #ff0000; opacity: 0; transition: opacity 0.2s;
     pointer-events: none; z-index: 30; text-align: center;
@@ -147,7 +143,6 @@
 <div id="moveZone"></div>
 <div id="lookZone"></div>
 
-<div id="debug">загрузка...</div>
 <div id="crosshair"></div>
 <div id="vignette"></div>
 <div id="flash"></div>
@@ -157,14 +152,17 @@
 <div id="inventory"></div>
 
 <div id="joy"><div id="joyStick"></div></div>
-<div id="actionBtn">E</div>
-<div id="lightBtn">🔦</div>
+
+<div id="btnStack">
+  <div id="lightBtn">🔦</div>
+  <div id="actionBtn">E</div>
+</div>
+
 <div id="fsBtn">⛶</div>
 
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const debugEl = document.getElementById('debug');
 const interactEl = document.getElementById('interact');
 const noteEl = document.getElementById('note');
 const invEl = document.getElementById('inventory');
@@ -180,34 +178,58 @@ resize();
 
 // ===== КАРТА ДОМА =====
 // 0 = пол, 1 = обои, 2 = дверь, 3 = окно смерти, 4 = дерево,
-// 5 = окно, 6 = стол, 7 = компьютер, 8 = ковёр, 9 = шкаф,
-// 10 = лампа (источник света), 11 = записка, 12 = ключ, 13 = дверь запертая
+// 5 = окно (вид на улицу), 6 = стол, 7 = компьютер, 8 = ковёр,
+// 9 = шкаф, 10 = лампа, 11 = записка, 12 = ключ, 13 = запертая дверь
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,8,8,8,0,0,5,5,1,8,8,8,8,8,8,1,1,5,5,1],
-  [1,8,6,6,0,0,5,5,2,8,6,6,8,8,8,0,0,0,0,1],
-  [1,8,6,7,0,0,0,0,8,8,6,7,8,8,8,0,0,0,0,1],
-  [1,8,8,8,8,8,8,8,8,8,8,8,8,8,8,0,0,0,0,1],
-  [1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,8,8,8,8,8,1,8,8,8,8,8,8,8,8,8,8,8,8,1],
-  [1,8,9,9,8,8,1,8,6,6,6,8,8,6,6,6,8,9,8,1],
-  [1,8,9,9,8,8,13,8,6,7,6,8,8,6,7,6,8,9,8,1],
-  [1,8,8,8,8,8,1,8,8,8,8,8,8,8,8,8,8,8,8,1],
-  [1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
-  [1,8,8,8,8,8,8,8,8,8,8,8,1,8,8,8,8,8,8,1],
-  [1,8,6,6,6,8,8,8,8,8,8,8,1,8,6,6,6,8,8,1],
-  [1,8,6,7,6,8,8,3,3,8,8,8,0,8,6,7,6,8,8,1],
-  [1,8,8,8,8,8,8,3,3,8,8,8,0,8,8,8,8,8,8,1],
+  [1,5,0,0,0,0,0,0,1,5,0,0,0,0,0,1,5,0,0,1],
+  [1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,1,1,2,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,1],
+  [1,5,0,0,0,0,0,0,1,5,0,0,0,0,0,1,5,0,0,1],
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
-// Позиции ламп, записок, ключей
-const lamps = [
-  { x: 3.5, y: 2.5, on: true, power: 0.5 },
-  { x: 9.5, y: 7.5, on: true, power: 0.5 },
-  { x: 3.5, y: 12.5, on: true, power: 0.5 },
-  { x: 15.5, y: 2.5, on: false, power: 0.4 }
+// Мебель как спрайты
+const sprites = [
+  // Спальня 1
+  { type: 'bed',        x: 2.5,  y: 2.0,  w: 1.6, h: 1.0 },
+  { type: 'nightstand', x: 1.2,  y: 1.5,  w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 1.2,  y: 1.5,  w: 0.3, h: 0.3, on: true, power: 0.6 },
+  // Комната с компьютером
+  { type: 'table',      x: 11.5, y: 2.5,  w: 2.0, h: 0.9 },
+  { type: 'computer',   x: 11.5, y: 1.8,  w: 1.0, h: 0.7 },
+  { type: 'chair',      x: 11.5, y: 3.6,  w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 12.8, y: 2.2,  w: 0.3, h: 0.3, on: true, power: 0.5 },
+  // Гостиная
+  { type: 'sofa',       x: 17.5, y: 2.5,  w: 2.2, h: 1.0 },
+  { type: 'table',      x: 17.5, y: 4.2,  w: 1.4, h: 0.8 },
+  { type: 'shelf',      x: 18.5, y: 1.2,  w: 1.0, h: 0.5 },
+  { type: 'lamp',       x: 16.5, y: 1.2,  w: 0.3, h: 0.3, on: true, power: 0.5 },
+  // Кухня
+  { type: 'stove',      x: 2.0,  y: 12.0, w: 0.9, h: 0.9 },
+  { type: 'fridge',     x: 3.2,  y: 12.0, w: 0.9, h: 0.9 },
+  { type: 'table',      x: 4.5,  y: 12.5, w: 1.6, h: 0.9 },
+  { type: 'chair',      x: 4.5,  y: 13.6, w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 3.0,  y: 11.5, w: 0.3, h: 0.3, on: true, power: 0.6 },
+  // Окно смерти
+  { type: 'lamp',       x: 8.5,  y: 12.5, w: 0.3, h: 0.3, on: false, power: 0.4 },
+  // Спальня 2
+  { type: 'bed',        x: 16.5, y: 12.0, w: 1.6, h: 1.0 },
+  { type: 'nightstand', x: 15.2, y: 12.0, w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 15.2, y: 12.0, w: 0.3, h: 0.3, on: false, power: 0.5 },
+  { type: 'shelf',      x: 18.5, y: 13.5, w: 1.0, h: 0.5 },
 ];
 
 const notes = {
@@ -216,12 +238,10 @@ const notes = {
   '13,12': { title: 'ЗАПИСКА 3', text: '«Оно смотрит через окно. Не подходи близко.»' }
 };
 
-const keysItems = { '2,7': false, '17,7': false };
 let hasKey = false;
 let monsterActive = false;
 let monster = null;
-let monsterTimer = 0;
-let gameTime = 0;
+let doorOpenCount = 0;
 
 // Двери
 const doors = {};
@@ -232,17 +252,24 @@ for (let y = 0; y < MAP_H; y++) {
   }
 }
 
+// Окна
+const windows = [];
+for (let y = 0; y < MAP_H; y++) {
+  for (let x = 0; x < MAP_W; x++) {
+    if (map[y][x] === 5) windows.push({ x, y });
+  }
+}
+
 const player = {
   x: 4.5, y: 2.5,
   dir: 0,
   pitch: 0,
   fov: Math.PI / 3,
   speed: 0.045,
-  flashlight: true,
+  flashlight: false,
   battery: 1.0
 };
-
-// ===== ЗВУК (Web Audio API) =====
+ // ===== ЗВУК =====
 let audioCtx = null;
 function initAudio() {
   if (audioCtx) return;
@@ -265,9 +292,7 @@ function playTone(freq, dur, type = 'sine', vol = 0.1) {
   osc.stop(audioCtx.currentTime + dur);
 }
 
-function playFootstep() {
-  playTone(80 + Math.random() * 40, 0.08, 'sine', 0.05);
-}
+function playFootstep() { playTone(80 + Math.random() * 40, 0.08, 'sine', 0.05); }
 
 function playDoorCreak() {
   if (!audioCtx) return;
@@ -298,7 +323,8 @@ function playWhisper() {
   osc.start();
   osc.stop(audioCtx.currentTime + 1.2);
 }
- // ===== УПРАВЛЕНИЕ =====
+
+// ===== УПРАВЛЕНИЕ =====
 const keys = {};
 window.addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
@@ -429,8 +455,8 @@ function doAction() {
       playDoorCreak();
       showMsg(door.open ? 'Дверь открывается...' : 'Дверь закрывается...');
       if (door.open) {
-        monsterTimer++;
-        if (monsterTimer >= 3 && !monsterActive) activateMonster();
+        doorOpenCount++;
+        if (doorOpenCount >= 3 && !monsterActive) activateMonster();
       }
       return;
     }
@@ -455,17 +481,6 @@ function doAction() {
       showMsg('ОКНО СМОТРИТ НА ТЕБЯ');
       return;
     }
-    if (cell === 5) { showMsg('За окном — тёмная улица...'); playWhisper(); return; }
-    if (cell === 7) { showMsg('Экран монитора мерцает...'); playTone(300, 0.1, 'square', 0.05); return; }
-    if (cell === 10) {
-      const lamp = lamps.find(l => Math.floor(l.x) === x && Math.floor(l.y) === y);
-      if (lamp) {
-        lamp.on = !lamp.on;
-        playTone(lamp.on ? 800 : 200, 0.1, 'square', 0.06);
-        showMsg(lamp.on ? 'Лампа включена' : 'Лампа выключена');
-      }
-      return;
-    }
     if (cell === 11) {
       const note = notes[key];
       if (note) showNote(note.title, note.text);
@@ -481,6 +496,30 @@ function doAction() {
       return;
     }
   }
+
+  for (const s of sprites) {
+    const dx = s.x - player.x, dy = s.y - player.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 1.4) continue;
+    const angleTo = Math.atan2(dy, dx);
+    let diff = angleTo - player.dir;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    if (Math.abs(diff) > 0.5) continue;
+
+    if (s.type === 'lamp') {
+      s.on = !s.on;
+      playTone(s.on ? 800 : 200, 0.1, 'square', 0.06);
+      showMsg(s.on ? 'Лампа включена' : 'Лампа выключена');
+      return;
+    }
+    if (s.type === 'computer') { showMsg('Экран монитора мерцает...'); playTone(300, 0.1, 'square', 0.05); return; }
+    if (s.type === 'bed') { showMsg('Кровать. Кто-то спал здесь...'); return; }
+    if (s.type === 'sofa') { showMsg('Диван. Пахнет пылью.'); return; }
+    if (s.type === 'stove') { showMsg('Плита. Холодная.'); return; }
+    if (s.type === 'fridge') { showMsg('Холодильник. Гудит.'); playTone(120, 0.3, 'sawtooth', 0.05); return; }
+  }
+
   showMsg('Здесь нечего делать');
 }
 
@@ -501,7 +540,7 @@ function showNote(title, text) {
 // ===== МОНСТР =====
 function activateMonster() {
   monsterActive = true;
-  monster = { x: 1.5, y: 13.5, speed: 0.015, visible: false };
+  monster = { x: 1.5, y: 13.5, speed: 0.012, visible: false };
   showMsg('...что-то проснулось в доме...');
   playWhisper();
   setTimeout(playWhisper, 800);
@@ -510,29 +549,24 @@ function activateMonster() {
 
 function updateMonster() {
   if (!monsterActive || !monster) return;
-
   const dx = player.x - monster.x;
   const dy = player.y - monster.y;
   const dist = Math.hypot(dx, dy);
-
   if (dist > 0.8) {
     const nx = monster.x + (dx / dist) * monster.speed;
     const ny = monster.y + (dy / dist) * monster.speed;
     if (!isSolid(nx, monster.y)) monster.x = nx;
     if (!isSolid(monster.x, ny)) monster.y = ny;
   } else {
-    // догнал — вспышка и отбрасывание
     document.getElementById('flash').style.opacity = 0.9;
     setTimeout(() => document.getElementById('flash').style.opacity = 0, 500);
     playWhisper();
     monster.x = 1.5; monster.y = 13.5;
     showMsg('ОНО ПРИКОСНУЛОСЬ К ТЕБЕ');
   }
-
   monster.visible = dist < 8;
-}
-
-// ===== ПОЛНОЭКРАННЫЙ =====
+ }
+ // ===== ПОЛНОЭКРАННЫЙ =====
 document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
 document.getElementById('fsBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFullscreen(); }, { passive: false });
 
@@ -562,7 +596,7 @@ function isSolid(x, y) {
   const mx = Math.floor(x), my = Math.floor(y);
   if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) return true;
   const cell = map[my][mx];
-  if (cell === 0 || cell === 8 || cell === 12) return false;
+  if (cell === 0 || cell === 8 || cell === 11 || cell === 12) return false;
   if (cell === 2 || cell === 13) {
     const key = `${mx},${my}`;
     const door = doors[key];
@@ -573,7 +607,7 @@ function isSolid(x, y) {
 }
 
 // ===== ЦВЕТ СТЕНЫ =====
-function wallColor(cellType, shade, wallX, doorProgress) {
+function wallColor(cellType, shade, wallX) {
   const s = shade;
   if (cellType === 2 || cellType === 13) {
     const panel = Math.abs(wallX - 0.5);
@@ -590,30 +624,17 @@ function wallColor(cellType, shade, wallX, doorProgress) {
     return `rgb(${Math.floor(85*s*plank)},${Math.floor(55*s*plank)},${Math.floor(35*s*plank)})`;
   }
   if (cellType === 5) {
-    const night = Math.sin(wallX * 20) * 0.5 + 0.5;
-    return `rgb(${Math.floor(20*s)},${Math.floor(30*s)},${Math.floor(70*s + night * 30 * s)})`;
+    return `rgb(${Math.floor(10*s)},${Math.floor(15*s)},${Math.floor(30*s)})`;
   }
   if (cellType === 6) return `rgb(${Math.floor(70*s)},${Math.floor(45*s)},${Math.floor(25*s)})`;
-  if (cellType === 7) {
-    const screenGlow = Math.sin(wallX * 30) > 0 ? 0.9 : 0.4;
-    if (wallX > 0.3 && wallX < 0.7) {
-      return `rgb(${Math.floor(30*s)},${Math.floor(100*s*screenGlow)},${Math.floor(50*s*screenGlow)})`;
-    }
-    return `rgb(${Math.floor(25*s)},${Math.floor(25*s)},${Math.floor(30*s)})`;
-  }
+  if (cellType === 7) return `rgb(${Math.floor(25*s)},${Math.floor(25*s)},${Math.floor(30*s)})`;
   if (cellType === 9) {
     const door = Math.floor(wallX * 4) % 2 === 0 ? 1 : 0.85;
     return `rgb(${Math.floor(65*s*door)},${Math.floor(40*s*door)},${Math.floor(25*s*door)})`;
   }
-  if (cellType === 10) {
-    return `rgb(${Math.floor(200*s)},${Math.floor(180*s)},${Math.floor(80*s)})`;
-  }
-  if (cellType === 11) {
-    return `rgb(${Math.floor(230*s)},${Math.floor(220*s)},${Math.floor(190*s)})`;
-  }
-  if (cellType === 12) {
-    return `rgb(${Math.floor(255*s)},${Math.floor(215*s)},${Math.floor(0*s)})`;
-  }
+  if (cellType === 10) return `rgb(${Math.floor(200*s)},${Math.floor(180*s)},${Math.floor(80*s)})`;
+  if (cellType === 11) return `rgb(${Math.floor(230*s)},${Math.floor(220*s)},${Math.floor(190*s)})`;
+  if (cellType === 12) return `rgb(${Math.floor(255*s)},${Math.floor(215*s)},${Math.floor(0)})`;
   const stripe = Math.floor(wallX * 8) % 2 === 0 ? 1 : 0.85;
   return `rgb(${Math.floor(90*s*stripe)},${Math.floor(65*s*stripe)},${Math.floor(50*s*stripe)})`;
 }
@@ -621,15 +642,191 @@ function wallColor(cellType, shade, wallX, doorProgress) {
 // ===== СВЕТ =====
 function getLightAt(x, y) {
   let light = 0;
-  for (const lamp of lamps) {
-    if (!lamp.on) continue;
-    const d = Math.hypot(lamp.x - x, lamp.y - y);
-    light += lamp.power / (1 + d * d * 0.5);
+  for (const s of sprites) {
+    if (s.type !== 'lamp' || !s.on) continue;
+    const d = Math.hypot(s.x - x, s.y - y);
+    light += (s.power || 0.5) / (1 + d * d * 0.5);
   }
   return Math.min(1.2, light);
 }
 
-// ===== RAYCASTING =====
+// ===== ВИД ИЗ ОКНА =====
+function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
+  const topColor = [10, 20, 45];
+  const midColor = [20, 45, 75];
+  const botColor = [30, 70, 100];
+  const t = 1 - wallX;
+  let r, g, b;
+  if (t < 0.5) {
+    const k = t * 2;
+    r = topColor[0] + (midColor[0] - topColor[0]) * k;
+    g = topColor[1] + (midColor[1] - topColor[1]) * k;
+    b = topColor[2] + (midColor[2] - topColor[2]) * k;
+  } else {
+    const k = (t - 0.5) * 2;
+    r = midColor[0] + (botColor[0] - midColor[0]) * k;
+    g = midColor[1] + (botColor[1] - midColor[1]) * k;
+    b = midColor[2] + (botColor[2] - midColor[2]) * k;
+  }
+  r *= shade; g *= shade; b *= shade;
+  ctx.fillStyle = `rgb(${Math.floor(r)},${Math.floor(g)},${Math.floor(b)})`;
+  ctx.fillRect(screenX, y0, rayW, wallH);
+
+  const moonX = screenX + rayW * 0.5;
+  const moonY = y0 + wallH * 0.18;
+  if (wallX > 0.3 && wallX < 0.7) {
+    ctx.fillStyle = `rgba(220,230,255,${0.9 * shade})`;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, wallH * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(150,180,255,${0.15 * shade})`;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, wallH * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const treeSeed = Math.floor(wallX * 12);
+  if (treeSeed % 2 === 0 && wallX > 0.1 && wallX < 0.9) {
+    ctx.fillStyle = `rgba(0,5,15,${0.85 * shade})`;
+    const treeX = screenX + rayW * ((treeSeed * 37) % 100) / 100;
+    const treeW = rayW * 3;
+    const treeTop = y0 + wallH * 0.15;
+    const treeBot = y0 + wallH * 0.85;
+    ctx.fillRect(treeX, treeTop, treeW, treeBot - treeTop);
+  }
+
+  const fogGrad = ctx.createLinearGradient(0, y0 + wallH * 0.6, 0, y0 + wallH);
+  fogGrad.addColorStop(0, `rgba(100,150,200,0)`);
+  fogGrad.addColorStop(1, `rgba(100,150,200,${0.3 * shade})`);
+  ctx.fillStyle = fogGrad;
+  ctx.fillRect(screenX, y0 + wallH * 0.6, rayW, wallH * 0.4);
+
+  ctx.fillStyle = `rgba(20,10,5,${0.95 * shade})`;
+  ctx.fillRect(screenX, y0, rayW, wallH * 0.04);
+  ctx.fillRect(screenX, y0 + wallH * 0.96, rayW, wallH * 0.04);
+  if (Math.abs(wallX - 0.5) < 0.03) {
+    ctx.fillRect(screenX, y0, rayW, wallH);
+  }
+  if (wallX > 0 && wallX < 0.02) {
+    ctx.fillRect(screenX, y0, rayW, wallH);
+  }
+  if (wallX > 0.98 && wallX < 1) {
+    ctx.fillRect(screenX, y0, rayW, wallH);
+  }
+}
+
+// ===== СПРАЙТЫ (МЕБЕЛЬ) =====
+function drawSprite(sprite, zbuffer, horizon) {
+  const dx = sprite.x - player.x;
+  const dy = sprite.y - player.y;
+  const dist = Math.hypot(dx, dy);
+
+  let angle = Math.atan2(dy, dx) - player.dir;
+  while (angle < -Math.PI) angle += Math.PI * 2;
+  while (angle > Math.PI) angle -= Math.PI * 2;
+
+  if (Math.abs(angle) > player.fov / 2 + 0.3) return;
+
+  const correctedDist = dist * Math.cos(angle);
+  if (correctedDist < 0.1) return;
+
+  const screenX = (0.5 + angle / player.fov) * W;
+  const sizeH = Math.min(H * 3, (H / correctedDist) * sprite.h);
+  const sizeW = Math.min(W, (W / correctedDist) * sprite.w);
+  const y0 = horizon - sizeH / 2 + (H / correctedDist) * 0.2;
+  const x0 = screenX - sizeW / 2;
+
+  const rayIndex = Math.floor((screenX / W) * zbuffer.length);
+  if (rayIndex >= 0 && rayIndex < zbuffer.length && zbuffer[rayIndex] < correctedDist) return;
+
+  const shade = Math.max(0.2, 1 - correctedDist / 12);
+
+  ctx.save();
+  ctx.globalAlpha = 1;
+
+  if (sprite.type === 'bed') {
+    ctx.fillStyle = `rgba(${Math.floor(90*shade)},${Math.floor(50*shade)},${Math.floor(40*shade)},1)`;
+    ctx.fillRect(x0, y0 + sizeH * 0.3, sizeW, sizeH * 0.7);
+    ctx.fillStyle = `rgba(${Math.floor(220*shade)},${Math.floor(210*shade)},${Math.floor(190*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.05, y0 + sizeH * 0.3, sizeW * 0.9, sizeH * 0.15);
+    ctx.fillStyle = `rgba(${Math.floor(60*shade)},${Math.floor(30*shade)},${Math.floor(20*shade)},1)`;
+    ctx.fillRect(x0, y0, sizeW, sizeH * 0.35);
+  } else if (sprite.type === 'nightstand') {
+    ctx.fillStyle = `rgba(${Math.floor(80*shade)},${Math.floor(50*shade)},${Math.floor(30*shade)},1)`;
+    ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgba(${Math.floor(50*shade)},${Math.floor(30*shade)},${Math.floor(20*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.3, sizeW * 0.8, sizeH * 0.05);
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.6, sizeW * 0.8, sizeH * 0.05);
+  } else if (sprite.type === 'table') {
+    ctx.fillStyle = `rgba(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)},1)`;
+    ctx.fillRect(x0, y0 + sizeH * 0.1, sizeW, sizeH * 0.15);
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.25, sizeW * 0.08, sizeH * 0.75);
+    ctx.fillRect(x0 + sizeW * 0.82, y0 + sizeH * 0.25, sizeW * 0.08, sizeH * 0.75);
+  } else if (sprite.type === 'computer') {
+    ctx.fillStyle = `rgba(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.25, sizeW * 0.8, sizeH * 0.6);
+    const screenGlow = Math.sin(gameTime * 3) > 0 ? 0.9 : 0.6;
+    ctx.fillStyle = `rgba(${Math.floor(30*shade)},${Math.floor(120*shade*screenGlow)},${Math.floor(70*shade*screenGlow)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.15, y0 + sizeH * 0.3, sizeW * 0.7, sizeH * 0.5);
+    ctx.fillStyle = `rgba(${Math.floor(20*shade)},${Math.floor(20*shade)},${Math.floor(25*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.35, y0 + sizeH * 0.85, sizeW * 0.3, sizeH * 0.15);
+    ctx.fillStyle = `rgba(${Math.floor(50*shade)},${Math.floor(50*shade)},${Math.floor(55*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.95, y0 + sizeH * 0.3, sizeW * 0.4, sizeH * 0.6);
+  } else if (sprite.type === 'chair') {
+    ctx.fillStyle = `rgba(${Math.floor(60*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.4, sizeW * 0.8, sizeH * 0.15);
+    ctx.fillRect(x0 + sizeW * 0.15, y0 + sizeH * 0.55, sizeW * 0.08, sizeH * 0.45);
+    ctx.fillRect(x0 + sizeW * 0.77, y0 + sizeH * 0.55, sizeW * 0.08, sizeH * 0.45);
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.05, sizeW * 0.8, sizeH * 0.35);
+  } else if (sprite.type === 'sofa') {
+    ctx.fillStyle = `rgba(${Math.floor(70*shade)},${Math.floor(40*shade)},${Math.floor(50*shade)},1)`;
+    ctx.fillRect(x0, y0 + sizeH * 0.3, sizeW, sizeH * 0.7);
+    ctx.fillStyle = `rgba(${Math.floor(90*shade)},${Math.floor(50*shade)},${Math.floor(60*shade)},1)`;
+    ctx.fillRect(x0, y0 + sizeH * 0.2, sizeW, sizeH * 0.15);
+    ctx.fillRect(x0, y0 + sizeH * 0.15, sizeW * 0.15, sizeH * 0.85);
+    ctx.fillRect(x0 + sizeW * 0.85, y0 + sizeH * 0.15, sizeW * 0.15, sizeH * 0.85);
+  } else if (sprite.type === 'shelf') {
+    ctx.fillStyle = `rgba(${Math.floor(65*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)},1)`;
+    ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgba(0,0,0,${0.5*shade})`;
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.25, sizeW * 0.8, sizeH * 0.1);
+    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.55, sizeW * 0.8, sizeH * 0.1);
+    ctx.fillStyle = `rgba(${Math.floor(150*shade)},${Math.floor(120*shade)},${Math.floor(60*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.15, y0 + sizeH * 0.4, sizeW * 0.15, sizeH * 0.15);
+    ctx.fillRect(x0 + sizeW * 0.35, y0 + sizeH * 0.4, sizeW * 0.15, sizeH * 0.15);
+    ctx.fillRect(x0 + sizeW * 0.55, y0 + sizeH * 0.4, sizeW * 0.15, sizeH * 0.15);
+  } else if (sprite.type === 'stove') {
+    ctx.fillStyle = `rgba(${Math.floor(60*shade)},${Math.floor(60*shade)},${Math.floor(65*shade)},1)`;
+    ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgba(0,0,0,${0.8*shade})`;
+    ctx.fillRect(x0 + sizeW * 0.05, y0 + sizeH * 0.1, sizeW * 0.9, sizeH * 0.08);
+    ctx.fillStyle = `rgba(${Math.floor(200*shade)},${Math.floor(50*shade)},${Math.floor(30*shade)},0.5)`;
+    ctx.beginPath();
+    ctx.arc(x0 + sizeW * 0.3, y0 + sizeH * 0.25, sizeW * 0.08, 0, Math.PI * 2);
+    ctx.arc(x0 + sizeW * 0.7, y0 + sizeH * 0.25, sizeW * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (sprite.type === 'fridge') {
+    ctx.fillStyle = `rgba(${Math.floor(180*shade)},${Math.floor(180*shade)},${Math.floor(190*shade)},1)`;
+    ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgba(0,0,0,${0.3*shade})`;
+    ctx.fillRect(x0 + sizeW * 0.05, y0 + sizeH * 0.45, sizeW * 0.9, sizeH * 0.05);
+    ctx.fillStyle = `rgba(${Math.floor(80*shade)},${Math.floor(80*shade)},${Math.floor(90*shade)},1)`;
+    ctx.fillRect(x0 + sizeW * 0.85, y0 + sizeH * 0.5, sizeW * 0.05, sizeH * 0.15);
+  } else if (sprite.type === 'lamp') {
+    const lampShade = sprite.on ? 1 : 0.3;
+    ctx.fillStyle = `rgba(${Math.floor(255*lampShade)},${Math.floor(220*lampShade)},${Math.floor(120*lampShade)},1)`;
+    ctx.beginPath();
+    ctx.arc(x0 + sizeW * 0.5, y0 + sizeH * 0.4, sizeW * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(${Math.floor(180*lampShade)},${Math.floor(150*lampShade)},${Math.floor(80*lampShade)},1)`;
+    ctx.beginPath();
+    ctx.arc(x0 + sizeW * 0.5, y0 + sizeH * 0.4, sizeW * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+ }
+ // ===== RAYCASTING =====
 function castRays() {
   const numRays = Math.min(W, 400);
   const step = W / numRays;
@@ -651,7 +848,7 @@ function castRays() {
       const mx = Math.floor(x), my = Math.floor(y);
       if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) { hit = true; break; }
       const cell = map[my][mx];
-      if (cell > 0 && cell !== 8 && cell !== 12) {
+      if (cell > 0 && cell !== 8 && cell !== 11 && cell !== 12) {
         if (cell === 2 || cell === 13) {
           const key = `${mx},${my}`;
           const door = doors[key];
@@ -676,16 +873,27 @@ function castRays() {
     let shade = Math.max(0.15, 1 - correctedDist / 12);
     if (side === 1) shade *= 0.75;
 
-    // свет от ламп
     const hitX = player.x + cos * dist;
     const hitY = player.y + sin * dist;
     const light = getLightAt(hitX, hitY);
     shade = Math.min(1.5, shade + light);
 
-    ctx.fillStyle = wallColor(cellType, shade, wallX, doorProgress);
-    ctx.fillRect(screenX, y0, rayW, wallH);
+    if (cellType === 5) {
+      drawWindowView(screenX, y0, wallH, rayW, wallX, shade);
+    } else if (cellType === 2 || cellType === 13) {
+      const doorOffset = doorProgress;
+      ctx.fillStyle = wallColor(cellType, shade, wallX);
+      ctx.fillRect(screenX, y0, rayW, wallH);
+      ctx.fillStyle = `rgba(0,0,0,${0.3 * doorOffset})`;
+      ctx.fillRect(screenX, y0, rayW, wallH);
+      ctx.strokeStyle = `rgba(0,0,0,${0.5*shade})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(screenX, y0, rayW, wallH);
+    } else {
+      ctx.fillStyle = wallColor(cellType, shade, wallX);
+      ctx.fillRect(screenX, y0, rayW, wallH);
+    }
 
-    // фонарик: яркое пятно в центре
     if (player.flashlight && player.battery > 0) {
       const centerDist = Math.abs(i - numRays / 2) / (numRays / 2);
       const beam = Math.max(0, 1 - centerDist * 2.5);
@@ -693,7 +901,7 @@ function castRays() {
       ctx.fillRect(screenX, y0, rayW, wallH);
     }
 
-    if (cellType !== 5 && cellType !== 7 && cellType !== 3 && cellType !== 10 && cellType !== 11) {
+    if (cellType !== 5 && cellType !== 3 && cellType !== 11 && cellType !== 12) {
       ctx.fillStyle = `rgba(0,0,0,${0.4 * shade})`;
       ctx.fillRect(screenX, y0 + wallH - wallH * 0.06, rayW, wallH * 0.06);
     }
@@ -702,10 +910,9 @@ function castRays() {
   return zbuffer;
 }
 
-// ===== СПРАЙТ МОНСТРА =====
+// ===== МОНСТР (РИСОВАНИЕ) =====
 function drawMonster(zbuffer, horizon) {
   if (!monsterActive || !monster || !monster.visible) return;
-
   const dx = monster.x - player.x;
   const dy = monster.y - player.y;
   const dist = Math.hypot(dx, dy);
@@ -721,18 +928,15 @@ function drawMonster(zbuffer, horizon) {
   const size = Math.min(H * 2, (H / correctedDist) * 0.8);
   const y0 = horizon - size / 2;
 
-  // проверка zbuffer
   const rayIndex = Math.floor((screenX / W) * zbuffer.length);
   if (rayIndex >= 0 && rayIndex < zbuffer.length && zbuffer[rayIndex] < correctedDist) return;
 
-  // рисуем силуэт
   const alpha = Math.max(0.3, 1 - correctedDist / 10);
   ctx.fillStyle = `rgba(10,0,0,${alpha})`;
   ctx.beginPath();
   ctx.ellipse(screenX, y0 + size * 0.5, size * 0.25, size * 0.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // глаза
   ctx.fillStyle = `rgba(255,0,0,${alpha})`;
   ctx.beginPath();
   ctx.arc(screenX - size * 0.08, y0 + size * 0.35, size * 0.03, 0, Math.PI * 2);
@@ -742,6 +946,7 @@ function drawMonster(zbuffer, horizon) {
 
 // ===== ОБНОВЛЕНИЕ =====
 let stepTimer = 0;
+let gameTime = 0;
 function update(dt) {
   updateDoors();
   updateMonster();
@@ -763,15 +968,12 @@ function update(dt) {
   if (!isSolid(nx, player.y)) player.x = nx;
   if (!isSolid(player.x, ny)) player.y = ny;
 
-  // шаги
   if (moving) {
     stepTimer += dt;
     if (stepTimer > 0.4) { playFootstep(); stepTimer = 0; }
-    // разряд батареи
     if (player.flashlight) player.battery = Math.max(0, player.battery - dt * 0.005);
   }
 
-  // подсказка
   let hint = '';
   const fcos = Math.cos(player.dir), fsin = Math.sin(player.dir);
   for (let d = 0.5; d < 1.6; d += 0.2) {
@@ -782,9 +984,6 @@ function update(dt) {
     if (cell === 2) { const dd = doors[key]; hint = dd && dd.open ? 'E — закрыть дверь' : 'E — открыть дверь'; break; }
     if (cell === 13) { hint = hasKey ? 'E — открыть ключом' : '🔒 Заперто'; break; }
     if (cell === 3) { hint = 'E — прикоснуться к окну'; break; }
-    if (cell === 5) { hint = 'E — посмотреть в окно'; break; }
-    if (cell === 7) { hint = 'E — посмотреть на монитор'; break; }
-    if (cell === 10) { hint = 'E — переключить лампу'; break; }
     if (cell === 11) { hint = 'E — прочитать записку'; break; }
     if (cell === 12) { hint = 'E — взять ключ'; break; }
   }
@@ -803,14 +1002,12 @@ function loop(now) {
 
   const horizon = H / 2 + player.pitch;
 
-  // Потолок
   const ceilGrad = ctx.createLinearGradient(0, 0, 0, Math.max(1, horizon));
   ceilGrad.addColorStop(0, '#050505');
   ceilGrad.addColorStop(1, '#12100e');
   ctx.fillStyle = ceilGrad;
   ctx.fillRect(0, 0, W, Math.max(0, horizon));
 
-  // Пол
   const floorGrad = ctx.createLinearGradient(0, Math.max(0, horizon), 0, H);
   floorGrad.addColorStop(0, '#15100a');
   floorGrad.addColorStop(1, '#050302');
@@ -818,9 +1015,16 @@ function loop(now) {
   ctx.fillRect(0, Math.max(0, horizon), W, H - Math.max(0, horizon));
 
   const zbuffer = castRays();
+
+  const sortedSprites = sprites.slice().sort((a, b) => {
+    const da = Math.hypot(a.x - player.x, a.y - player.y);
+    const db = Math.hypot(b.x - player.x, b.y - player.y);
+    return db - da;
+  });
+  for (const s of sortedSprites) drawSprite(s, zbuffer, horizon);
+
   drawMonster(zbuffer, horizon);
 
-  // фонарик — затемнение по краям
   if (player.flashlight && player.battery > 0) {
     const grad = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.7);
     grad.addColorStop(0, 'rgba(0,0,0,0)');
@@ -829,18 +1033,12 @@ function loop(now) {
     ctx.fillRect(0, 0, W, H);
   }
 
-  debugEl.textContent =
-    `x:${player.x.toFixed(2)} y:${player.y.toFixed(2)}\n` +
-    `dir:${(player.dir*57.3).toFixed(0)}°\n` +
-    `заряд:${(player.battery*100).toFixed(0)}%`;
-
   if (Math.random() < 0.015) {
     const flash = document.getElementById('flash');
     flash.style.opacity = 0.05 + Math.random() * 0.1;
     setTimeout(() => flash.style.opacity = 0, 100);
   }
 
-  // случайный шёпот
   if (monsterActive && Math.random() < 0.005) playWhisper();
 
   requestAnimationFrame(loop);
