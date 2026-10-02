@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Окно смерти</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+
+  #ui {
+    position: fixed; inset: 0; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 20px; color: #8a0000; text-shadow: 0 0 10px #ff0000;
+  }
+  #title { font-size: 14px; letter-spacing: 4px; opacity: 0.6; }
+  #hint { font-size: 12px; opacity: 0.5; text-align: center; }
+
+  /* Джойстики — скрыты по умолчанию, появляются при касании */
+  .joy {
+    position: fixed; bottom: 30px; width: 130px; height: 130px;
+    border-radius: 50%; border: 2px solid rgba(255,0,0,0.25);
+    pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  }
+  .joy.active { opacity: 1; }
+  #joyLeft { left: 30px; }
+  #joyRight { right: 30px; }
+  .stick {
+    position: absolute; width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,0,0,0.35); top: 40px; left: 40px;
+    box-shadow: 0 0 15px rgba(255,0,0,0.5);
+  }
+
+  /* Кнопка действия */
+  #actionBtn {
+    position: fixed; right: 30px; bottom: 180px;
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4);
+    color: #ff3333; font-size: 12px; letter-spacing: 2px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto; touch-action: none; opacity: 0.7;
+    text-shadow: 0 0 8px #ff0000;
+  }
+  #actionBtn:active { background: rgba(255,0,0,0.4); opacity: 1; }
+
+  /* Прицел */
+  #crosshair {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,50,50,0.6); pointer-events: none;
+    box-shadow: 0 0 8px #ff0000;
+  }
+
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.95) 100%);
+  }
+  #flash {
+    position: fixed; inset: 0; pointer-events: none;
+    background: #ff0000; opacity: 0; transition: opacity 0.15s;
+  }
+
+  #msg {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+    color: #ff4444; font-size: 16px; letter-spacing: 2px;
+    text-shadow: 0 0 12px #ff0000; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="ui">
+  <div id="title">ОКНО СМЕРТИ</div>
+  <div id="hint">Левая половина экрана — движение • Правая — обзор</div>
+</div>
+
+<div id="crosshair"></div>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="msg"></div>
+
+<div class="joy" id="joyLeft"><div class="stick" id="stickL"></div></div>
+<div class="joy" id="joyRight"><div class="stick" id="stickR"></div></div>
+<div id="actionBtn">E</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+// ===== КАРТА =====
+// 2 = дверь (можно открыть), 3 = окно смерти (интерактив)
+const map = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,0,0,0,0,0,0,1,1,1,0,0,1],
+  [1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1],
+  [1,0,1,0,0,1,1,2,1,1,0,0,1,0,0,1],
+  [1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+  [1,0,0,0,0,1,0,3,0,1,0,0,0,0,0,1],
+  [1,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1],
+  [1,0,1,1,0,0,0,0,0,0,0,0,1,0,0,1],
+  [1,0,1,0,0,0,1,1,1,0,0,0,1,0,0,1],
+  [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
+  [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+const MAP_W = map[0].length, MAP_H = map.length;
+
+const player = {
+  x: 2.5, y: 2.5,
+  dir: 0,
+  pitch: 0,           // вертикальный обзор (Вариант Б)
+  fov: Math.PI / 3,
+  speed: 0.04
+};
+
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === 'e') doAction();
+});
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+canvas.addEventListener('click', () => canvas.requestPointerLock());
+document.addEventListener('mousemove', e => {
+  if (document.pointerLockElement === canvas) {
+    player.dir += e.movementX * 0.003;
+    player.pitch -= e.movementY * 0.002;  // Вариант Б
+    player.pitch = Math.max(-H * 0.3, Math.min(H * 0.3, player.pitch));
+  }
+});
+
+// ===== УНИВЕРСАЛЬНЫЕ СТИКИ (по половинам экрана) =====
+// Вариант А: джойстик появляется там, где коснулся палец
+let moveInput = { x: 0, y: 0 };
+let lookInput = { x: 0, y: 0 };
+
+const joyL = document.getElementById('joyLeft');
+const joyR = document.getElementById('joyRight');
+const stickL = document.getElementById('stickL');
+const stickR = document.getElementById('stickR');
+
+let touchL = null, touchR = null;
+let originL = { x: 0, y: 0 }, originR = { x: 0, y: 0 };
+const MAX_DIST = 45;
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const isLeft = t.clientX < W / 2;
+    const joy = isLeft ? joyL : joyR;
+    const stick = isLeft ? stickL : stickR;
+
+    // позиционируем джойстик в месте касания
+    joy.style.left = (t.clientX - 65) + 'px';
+    joy.style.top = (t.clientY - 65) + 'px';
+    joy.style.bottom = 'auto';
+    joy.style.right = 'auto';
+    joy.classList.add('active');
+
+    if (isLeft && touchL === null) {
+      touchL = t.identifier;
+      originL = { x: t.clientX, y: t.clientY };
+    } else if (!isLeft && touchR === null) {
+      touchR = t.identifier;
+      originR = { x: t.clientX, y: t.clientY };
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier === touchL) {
+      updateStick(t, originL, stickL, moveInput, true);
+    } else if (t.identifier === touchR) {
+      updateStick(t, originR, stickR, lookInput, false);
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier === touchL) {
+      touchL = null;
+      joyL.classList.remove('active');
+      stickL.style.transform = 'translate(0,0)';
+      moveInput.x = 0; moveInput.y = 0;
+    } else if (t.identifier === touchR) {
+      touchR = null;
+      joyR.classList.remove('active');
+      stickR.style.transform = 'translate(0,0)';
+      lookInput.x = 0; lookInput.y = 0;
+    }
+  }
+}, { passive: false });
+
+function updateStick(t, origin, stick, input, isMove) {
+  let dx = t.clientX - origin.x;
+  let dy = t.clientY - origin.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist > MAX_DIST) { dx = dx / dist * MAX_DIST; dy = dy / dist * MAX_DIST; }
+  stick.style.transform = `translate(${dx}px, ${dy}px)`;
+  input.x = dx / MAX_DIST;
+  input.y = dy / MAX_DIST;
+}
+
+// ===== КНОПКА ДЕЙСТВИЯ (Вариант Г) =====
+document.getElementById('actionBtn').addEventListener('touchstart', e => {
+  e.preventDefault();
+  doAction();
+}, { passive: false });
+document.getElementById('actionBtn').addEventListener('click', doAction);
+
+function doAction() {
+  // ищем интерактивную клетку перед игроком (в радиусе 1.2)
+  const cos = Math.cos(player.dir), sin = Math.sin(player.dir);
+  for (let d = 0.3; d < 1.5; d += 0.2) {
+    const x = Math.floor(player.x + cos * d);
+    const y = Math.floor(player.y + sin * d);
+    if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) continue;
+    const cell = map[y][x];
+    if (cell === 2) {
+      map[y][x] = 0;
+      showMsg('Дверь открыта...');
+      return;
+    }
+    if (cell === 3) {
+      document.getElementById('flash').style.opacity = 0.6;
+      setTimeout(() => document.getElementById('flash').style.opacity = 0, 300);
+      showMsg('ОКНО СМОТРИТ НА ТЕБЯ');
+      return;
+    }
+  }
+  showMsg('Здесь нечего делать');
+}
+
+function showMsg(text) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.style.opacity = 1;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.opacity = 0, 1500);
+}
+
+// ===== RAYCASTING =====
+function castRays() {
+  const numRays = Math.min(W, 320);
+  const step = W / numRays;
+  const rayW = step + 1;
+  const horizon = H / 2 + player.pitch;  // сдвиг горизонта (Вариант Б)
+
+  for (let i = 0; i < numRays; i++) {
+    const screenX = i * step;
+    const rayAngle = player.dir - player.fov / 2 + (i / numRays) * player.fov;
+    const sin = Math.sin(rayAngle), cos = Math.cos(rayAngle);
+
+    let dist = 0, hit = false, side = 0, cellType = 1;
+    const stepSize = 0.02;
+
+    while (!hit && dist < 20) {
+      dist += stepSize;
+      const x = player.x + cos * dist;
+      const y = player.y + sin * dist;
+      const mx = Math.floor(x), my = Math.floor(y);
+      if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) { hit = true; break; }
+      if (map[my][mx] > 0) {
+        hit = true;
+        cellType = map[my][mx];
+        const prevX = player.x + cos * (dist - stepSize);
+        const prevY = player.y + sin * (dist - stepSize);
+        side = Math.floor(prevX) !== mx ? 0 : 1;
+      }
+    }
+
+    const correctedDist = dist * Math.cos(rayAngle - player.dir);
+    const wallH = Math.min(H * 2, (H / correctedDist) * 0.8);
+    const y0 = horizon - wallH / 2;
+
+    let shade = Math.max(0.05, 1 - correctedDist / 12);
+    if (side === 1) shade *= 0.7;
+
+    let r, g, b;
+    if (cellType === 2) {       // дверь — коричневая
+      r = Math.floor(90 * shade); g = Math.floor(60 * shade); b = Math.floor(30 * shade);
+    } else if (cellType === 3) { // окно смерти — кровавое
+      r = Math.floor(180 * shade); g = Math.floor(20 * shade); b = Math.floor(20 * shade);
+    } else {                     // обычная стена
+      r = Math.floor(30 * shade); g = Math.floor(60 * shade); b = Math.floor(20 * shade);
+    }
+
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(screenX, y0, rayW, wallH);
+  }
+  return horizon;
+}
+
+function update() {
+  player.dir += lookInput.x * 0.05;
+  player.pitch += lookInput.y * 30;  // Вариант Б через стик
+  player.pitch = Math.max(-H * 0.3, Math.min(H * 0.3, player.pitch));
+
+  let mx = moveInput.x, my = -moveInput.y;
+  if (keys['w']) my = 1;
+  if (keys['s']) my = -1;
+  if (keys['a']) mx = -1;
+  if (keys['d']) mx = 1;
+  if (keys['arrowleft']) player.dir -= 0.04;
+  if (keys['arrowright']) player.dir += 0.04;
+
+  const sin = Math.sin(player.dir), cos = Math.cos(player.dir);
+  const nx = player.x + (cos * my - sin * mx) * player.speed;
+  const ny = player.y + (sin * my + cos * mx) * player.speed;
+
+  if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
+  if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx;
+}
+
+function loop() {
+  update();
+
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0a0000');
+  grad.addColorStop(0.5, '#1a0505');
+  grad.addColorStop(1, '#000000');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  castRays();
+
+  if (Math.random() < 0.02) {
+    const flash = document.getElementById('flash');
+    flash.style.opacity = 0.05 + Math.random() * 0.1;
+    setTimeout(() => flash.style.opacity = 0, 100);
+  }
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+  </html>
