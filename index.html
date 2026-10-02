@@ -16,7 +16,7 @@
     position: fixed; inset: 0; pointer-events: none;
     display: flex; flex-direction: column; justify-content: space-between;
     padding: 15px; color: #8a0000; text-shadow: 0 0 10px #ff0000;
-    padding-top: env(safe-area-inset-top, 15px);
+    padding-top: env(safe-area-inset-top, 15px); z-index: 5;
   }
   #title { font-size: 12px; letter-spacing: 4px; opacity: 0.6; }
   #hint { font-size: 10px; opacity: 0.5; text-align: center; }
@@ -25,10 +25,9 @@
     position: fixed; top: 50px; left: 10px;
     color: #0f0; font-size: 10px; font-family: monospace;
     background: rgba(0,0,0,0.7); padding: 4px 6px; border-radius: 4px;
-    pointer-events: none; z-index: 100; line-height: 1.4;
+    pointer-events: none; z-index: 100; line-height: 1.4; display: none;
   }
 
-  /* Джойстик движения — появляется только когда тронул левую половину */
   #moveZone {
     position: fixed; left: 0; top: 0; width: 50%; height: 100%;
     pointer-events: auto; z-index: 10; touch-action: none;
@@ -61,6 +60,18 @@
     text-shadow: 0 0 8px #ff0000; z-index: 20;
   }
   #actionBtn:active { background: rgba(255,0,0,0.5); opacity: 1; }
+
+  #lightBtn {
+    position: fixed; right: 25px; bottom: 220px;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: rgba(255,200,0,0.15); border: 2px solid rgba(255,200,0,0.4);
+    color: #ffcc33; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto; touch-action: none; opacity: 0.7;
+    z-index: 20;
+  }
+  #lightBtn:active { background: rgba(255,200,0,0.5); opacity: 1; }
+  #lightBtn.on { background: rgba(255,200,0,0.5); }
 
   #fsBtn {
     position: fixed; right: 20px; top: 20px;
@@ -95,6 +106,32 @@
     position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
     color: #ff4444; font-size: 16px; letter-spacing: 2px;
     text-shadow: 0 0 12px #ff0000; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; z-index: 30; text-align: center; padding: 0 20px;
+  }
+
+  #note {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    background: rgba(20,10,5,0.95); border: 2px solid #8a0000;
+    color: #d4a373; font-size: 14px; line-height: 1.6; letter-spacing: 1px;
+    padding: 25px 30px; max-width: 90%; width: 340px;
+    text-shadow: 0 0 8px rgba(255,0,0,0.3); opacity: 0;
+    transition: opacity 0.3s; pointer-events: none; z-index: 40;
+    font-family: 'Courier New', monospace;
+  }
+  #note.show { opacity: 1; }
+  #note h3 { color: #ff3333; margin-bottom: 12px; font-size: 16px; letter-spacing: 3px; }
+
+  #interact {
+    position: fixed; bottom: 220px; left: 50%; transform: translateX(-50%);
+    color: #ff8888; font-size: 13px; letter-spacing: 2px;
+    text-shadow: 0 0 10px #ff0000; opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; z-index: 30; text-align: center;
+  }
+
+  #inventory {
+    position: fixed; top: 20px; left: 20px;
+    color: #ffcc33; font-size: 14px; letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255,200,0,0.6);
     pointer-events: none; z-index: 30;
   }
 </style>
@@ -115,15 +152,22 @@
 <div id="vignette"></div>
 <div id="flash"></div>
 <div id="msg"></div>
+<div id="note"></div>
+<div id="interact"></div>
+<div id="inventory"></div>
 
 <div id="joy"><div id="joyStick"></div></div>
 <div id="actionBtn">E</div>
+<div id="lightBtn">🔦</div>
 <div id="fsBtn">⛶</div>
 
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const debugEl = document.getElementById('debug');
+const interactEl = document.getElementById('interact');
+const noteEl = document.getElementById('note');
+const invEl = document.getElementById('inventory');
 
 let W, H;
 function resize() {
@@ -134,39 +178,132 @@ window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 100));
 resize();
 
-// ===== КАРТА =====
+// ===== КАРТА ДОМА =====
+// 0 = пол, 1 = обои, 2 = дверь, 3 = окно смерти, 4 = дерево,
+// 5 = окно, 6 = стол, 7 = компьютер, 8 = ковёр, 9 = шкаф,
+// 10 = лампа (источник света), 11 = записка, 12 = ключ, 13 = дверь запертая
 const map = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,4,4,0,0,0,0,0,0,1,1,1,0,0,1],
-  [1,0,4,0,0,0,0,0,0,0,0,0,1,0,0,1],
-  [1,0,4,0,0,1,1,2,1,1,0,0,1,0,0,1],
-  [1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
-  [1,0,0,0,0,1,0,3,0,1,0,0,0,0,0,1],
-  [1,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1],
-  [1,0,4,4,0,0,0,0,0,0,0,0,1,0,0,1],
-  [1,0,4,0,0,0,1,1,1,0,0,0,1,0,0,1],
-  [1,0,4,0,0,0,1,0,0,0,0,0,1,0,0,1],
-  [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,8,8,8,0,0,5,5,1,8,8,8,8,8,8,1,1,5,5,1],
+  [1,8,6,6,0,0,5,5,2,8,6,6,8,8,8,0,0,0,0,1],
+  [1,8,6,7,0,0,0,0,8,8,6,7,8,8,8,0,0,0,0,1],
+  [1,8,8,8,8,8,8,8,8,8,8,8,8,8,8,0,0,0,0,1],
+  [1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,8,8,8,8,8,1,8,8,8,8,8,8,8,8,8,8,8,8,1],
+  [1,8,9,9,8,8,1,8,6,6,6,8,8,6,6,6,8,9,8,1],
+  [1,8,9,9,8,8,13,8,6,7,6,8,8,6,7,6,8,9,8,1],
+  [1,8,8,8,8,8,1,8,8,8,8,8,8,8,8,8,8,8,8,1],
+  [1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
+  [1,8,8,8,8,8,8,8,8,8,8,8,1,8,8,8,8,8,8,1],
+  [1,8,6,6,6,8,8,8,8,8,8,8,1,8,6,6,6,8,8,1],
+  [1,8,6,7,6,8,8,3,3,8,8,8,0,8,6,7,6,8,8,1],
+  [1,8,8,8,8,8,8,3,3,8,8,8,0,8,8,8,8,8,8,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
-const player = {
-  x: 5.5, y: 11.5,
-  dir: -Math.PI / 2,
-  pitch: 0,
-  fov: Math.PI / 3,
-  speed: 0.045
+// Позиции ламп, записок, ключей
+const lamps = [
+  { x: 3.5, y: 2.5, on: true, power: 0.5 },
+  { x: 9.5, y: 7.5, on: true, power: 0.5 },
+  { x: 3.5, y: 12.5, on: true, power: 0.5 },
+  { x: 15.5, y: 2.5, on: false, power: 0.4 }
+];
+
+const notes = {
+  '4,2': { title: 'ЗАПИСКА 1', text: '«Не выключай свет. Оно приходит, когда темно.»' },
+  '9,8': { title: 'ЗАПИСКА 2', text: '«Ключ от подвала — в шкафу в зале. Не открывай красную дверь.»' },
+  '13,12': { title: 'ЗАПИСКА 3', text: '«Оно смотрит через окно. Не подходи близко.»' }
 };
 
-// ===== УПРАВЛЕНИЕ =====
+const keysItems = { '2,7': false, '17,7': false };
+let hasKey = false;
+let monsterActive = false;
+let monster = null;
+let monsterTimer = 0;
+let gameTime = 0;
+
+// Двери
+const doors = {};
+for (let y = 0; y < MAP_H; y++) {
+  for (let x = 0; x < MAP_W; x++) {
+    if (map[y][x] === 2) doors[`${x},${y}`] = { open: false, progress: 0, locked: false };
+    if (map[y][x] === 13) doors[`${x},${y}`] = { open: false, progress: 0, locked: true };
+  }
+}
+
+const player = {
+  x: 4.5, y: 2.5,
+  dir: 0,
+  pitch: 0,
+  fov: Math.PI / 3,
+  speed: 0.045,
+  flashlight: true,
+  battery: 1.0
+};
+
+// ===== ЗВУК (Web Audio API) =====
+let audioCtx = null;
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+document.addEventListener('touchstart', initAudio, { once: true });
+document.addEventListener('click', initAudio, { once: true });
+
+function playTone(freq, dur, type = 'sine', vol = 0.1) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.value = vol;
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + dur);
+}
+
+function playFootstep() {
+  playTone(80 + Math.random() * 40, 0.08, 'sine', 0.05);
+}
+
+function playDoorCreak() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.6);
+  gain.gain.value = 0.08;
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.6);
+}
+
+function playWhisper() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+  osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 1.2);
+  gain.gain.value = 0.04;
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 1.2);
+}
+ // ===== УПРАВЛЕНИЕ =====
 const keys = {};
 window.addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
   if (e.key.toLowerCase() === 'e') doAction();
+  if (e.key.toLowerCase() === 'f') toggleFlashlight();
 });
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
@@ -179,7 +316,7 @@ document.addEventListener('mousemove', e => {
   }
 });
 
-// ===== СВАЙП-ОБЗОР (правая половина) =====
+// ===== СВАЙП-ОБЗОР =====
 const lookZone = document.getElementById('lookZone');
 let lookTouchId = null;
 let lastLookX = 0, lastLookY = 0;
@@ -215,7 +352,7 @@ lookZone.addEventListener('touchend', e => {
   }
 }, { passive: false });
 
-// ===== ДЖОЙСТИК ДВИЖЕНИЯ (левая половина) =====
+// ===== ДЖОЙСТИК =====
 const moveZone = document.getElementById('moveZone');
 const joyEl = document.getElementById('joy');
 const joyStick = document.getElementById('joyStick');
@@ -264,18 +401,85 @@ moveZone.addEventListener('touchend', e => {
   }
 }, { passive: false });
 
-// ===== КНОПКА ДЕЙСТВИЯ =====
+// ===== ФОНАРИК =====
+document.getElementById('lightBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFlashlight(); }, { passive: false });
+document.getElementById('lightBtn').addEventListener('click', toggleFlashlight);
+
+function toggleFlashlight() {
+  player.flashlight = !player.flashlight;
+  document.getElementById('lightBtn').classList.toggle('on', player.flashlight);
+  playTone(600, 0.05, 'square', 0.05);
+}
+
+// ===== ДЕЙСТВИЕ =====
 document.getElementById('actionBtn').addEventListener('touchstart', e => { e.preventDefault(); doAction(); }, { passive: false });
 document.getElementById('actionBtn').addEventListener('click', doAction);
 
 function doAction() {
   const cos = Math.cos(player.dir), sin = Math.sin(player.dir);
-  for (let d = 0.3; d < 1.5; d += 0.2) {
+  for (let d = 0.3; d < 1.6; d += 0.15) {
     const x = Math.floor(player.x + cos * d), y = Math.floor(player.y + sin * d);
     if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) continue;
     const cell = map[y][x];
-    if (cell === 2) { map[y][x] = 0; showMsg('Дверь открыта...'); return; }
-    if (cell === 3) { document.getElementById('flash').style.opacity = 0.6; setTimeout(() => document.getElementById('flash').style.opacity = 0, 300); showMsg('ОКНО СМОТРИТ НА ТЕБЯ'); return; }
+    const key = `${x},${y}`;
+
+    if (cell === 2 && doors[key]) {
+      const door = doors[key];
+      door.open = !door.open;
+      playDoorCreak();
+      showMsg(door.open ? 'Дверь открывается...' : 'Дверь закрывается...');
+      if (door.open) {
+        monsterTimer++;
+        if (monsterTimer >= 3 && !monsterActive) activateMonster();
+      }
+      return;
+    }
+    if (cell === 13 && doors[key]) {
+      const door = doors[key];
+      if (hasKey) {
+        door.locked = false;
+        map[y][x] = 2;
+        door.open = true;
+        door.progress = 1;
+        playDoorCreak();
+        showMsg('Запертая дверь открыта ключом...');
+      } else {
+        showMsg('Заперто. Нужен ключ.');
+      }
+      return;
+    }
+    if (cell === 3) {
+      document.getElementById('flash').style.opacity = 0.6;
+      setTimeout(() => document.getElementById('flash').style.opacity = 0, 300);
+      playWhisper();
+      showMsg('ОКНО СМОТРИТ НА ТЕБЯ');
+      return;
+    }
+    if (cell === 5) { showMsg('За окном — тёмная улица...'); playWhisper(); return; }
+    if (cell === 7) { showMsg('Экран монитора мерцает...'); playTone(300, 0.1, 'square', 0.05); return; }
+    if (cell === 10) {
+      const lamp = lamps.find(l => Math.floor(l.x) === x && Math.floor(l.y) === y);
+      if (lamp) {
+        lamp.on = !lamp.on;
+        playTone(lamp.on ? 800 : 200, 0.1, 'square', 0.06);
+        showMsg(lamp.on ? 'Лампа включена' : 'Лампа выключена');
+      }
+      return;
+    }
+    if (cell === 11) {
+      const note = notes[key];
+      if (note) showNote(note.title, note.text);
+      playTone(400, 0.15, 'sine', 0.06);
+      return;
+    }
+    if (cell === 12) {
+      hasKey = true;
+      map[y][x] = 0;
+      invEl.textContent = '🔑 Ключ';
+      showMsg('Вы взяли ключ');
+      playTone(1000, 0.2, 'sine', 0.08);
+      return;
+    }
   }
   showMsg('Здесь нечего делать');
 }
@@ -285,10 +489,50 @@ function showMsg(text) {
   el.textContent = text;
   el.style.opacity = 1;
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.style.opacity = 0, 1500);
+  el._t = setTimeout(() => el.style.opacity = 0, 2000);
 }
 
-// ===== ПОЛНОЭКРАННЫЙ РЕЖИМ =====
+function showNote(title, text) {
+  noteEl.innerHTML = `<h3>${title}</h3>${text}`;
+  noteEl.classList.add('show');
+  setTimeout(() => noteEl.classList.remove('show'), 4000);
+}
+
+// ===== МОНСТР =====
+function activateMonster() {
+  monsterActive = true;
+  monster = { x: 1.5, y: 13.5, speed: 0.015, visible: false };
+  showMsg('...что-то проснулось в доме...');
+  playWhisper();
+  setTimeout(playWhisper, 800);
+  setTimeout(playWhisper, 1600);
+}
+
+function updateMonster() {
+  if (!monsterActive || !monster) return;
+
+  const dx = player.x - monster.x;
+  const dy = player.y - monster.y;
+  const dist = Math.hypot(dx, dy);
+
+  if (dist > 0.8) {
+    const nx = monster.x + (dx / dist) * monster.speed;
+    const ny = monster.y + (dy / dist) * monster.speed;
+    if (!isSolid(nx, monster.y)) monster.x = nx;
+    if (!isSolid(monster.x, ny)) monster.y = ny;
+  } else {
+    // догнал — вспышка и отбрасывание
+    document.getElementById('flash').style.opacity = 0.9;
+    setTimeout(() => document.getElementById('flash').style.opacity = 0, 500);
+    playWhisper();
+    monster.x = 1.5; monster.y = 13.5;
+    showMsg('ОНО ПРИКОСНУЛОСЬ К ТЕБЕ');
+  }
+
+  monster.visible = dist < 8;
+}
+
+// ===== ПОЛНОЭКРАННЫЙ =====
 document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
 document.getElementById('fsBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFullscreen(); }, { passive: false });
 
@@ -297,7 +541,6 @@ function toggleFullscreen() {
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
     if (el.requestFullscreen) el.requestFullscreen();
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (el.msRequestFullscreen) el.msRequestFullscreen();
   } else {
     if (document.exitFullscreen) document.exitFullscreen();
     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -305,34 +548,101 @@ function toggleFullscreen() {
   setTimeout(resize, 300);
 }
 
-// ===== ЦВЕТ СТЕНЫ =====
-function wallColor(cellType, shade, wallX) {
-  const s = shade;
-  if (cellType === 2) return `rgb(${Math.floor(140*s)},${Math.floor(90*s)},${Math.floor(45*s)})`;
-  if (cellType === 3) return `rgb(${Math.floor(220*s)},${Math.floor(30*s)},${Math.floor(30*s)})`;
-  if (cellType === 4) {
-    const stripe = Math.floor(wallX * 12) % 2 === 0 ? 1 : 0.7;
-    return `rgb(${Math.floor(80*s*stripe)},${Math.floor(55*s*stripe)},${Math.floor(35*s*stripe)})`;
+// ===== ДВЕРИ =====
+function updateDoors() {
+  for (const key in doors) {
+    const d = doors[key];
+    const target = d.open ? 1 : 0;
+    d.progress += (target - d.progress) * 0.08;
+    if (Math.abs(d.progress - target) < 0.01) d.progress = target;
   }
-  const row = Math.floor(wallX * 16) % 2 === 0 ? 1 : 0.75;
-  return `rgb(${Math.floor(110*s*row)},${Math.floor(55*s*row)},${Math.floor(40*s*row)})`;
+}
+
+function isSolid(x, y) {
+  const mx = Math.floor(x), my = Math.floor(y);
+  if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) return true;
+  const cell = map[my][mx];
+  if (cell === 0 || cell === 8 || cell === 12) return false;
+  if (cell === 2 || cell === 13) {
+    const key = `${mx},${my}`;
+    const door = doors[key];
+    if (door && door.progress > 0.5) return false;
+    return true;
+  }
+  return true;
+}
+
+// ===== ЦВЕТ СТЕНЫ =====
+function wallColor(cellType, shade, wallX, doorProgress) {
+  const s = shade;
+  if (cellType === 2 || cellType === 13) {
+    const panel = Math.abs(wallX - 0.5);
+    const p = panel < 0.15 ? 0.7 : 1;
+    const locked = cellType === 13 ? 0.6 : 1;
+    return `rgb(${Math.floor(120*s*p*locked)},${Math.floor(75*s*p*locked)},${Math.floor(35*s*p*locked)})`;
+  }
+  if (cellType === 3) {
+    const crack = Math.sin(wallX * 60) > 0.7 ? 0.5 : 1;
+    return `rgb(${Math.floor(200*s*crack)},${Math.floor(30*s*crack)},${Math.floor(30*s*crack)})`;
+  }
+  if (cellType === 4) {
+    const plank = Math.floor(wallX * 10) % 2 === 0 ? 1 : 0.8;
+    return `rgb(${Math.floor(85*s*plank)},${Math.floor(55*s*plank)},${Math.floor(35*s*plank)})`;
+  }
+  if (cellType === 5) {
+    const night = Math.sin(wallX * 20) * 0.5 + 0.5;
+    return `rgb(${Math.floor(20*s)},${Math.floor(30*s)},${Math.floor(70*s + night * 30 * s)})`;
+  }
+  if (cellType === 6) return `rgb(${Math.floor(70*s)},${Math.floor(45*s)},${Math.floor(25*s)})`;
+  if (cellType === 7) {
+    const screenGlow = Math.sin(wallX * 30) > 0 ? 0.9 : 0.4;
+    if (wallX > 0.3 && wallX < 0.7) {
+      return `rgb(${Math.floor(30*s)},${Math.floor(100*s*screenGlow)},${Math.floor(50*s*screenGlow)})`;
+    }
+    return `rgb(${Math.floor(25*s)},${Math.floor(25*s)},${Math.floor(30*s)})`;
+  }
+  if (cellType === 9) {
+    const door = Math.floor(wallX * 4) % 2 === 0 ? 1 : 0.85;
+    return `rgb(${Math.floor(65*s*door)},${Math.floor(40*s*door)},${Math.floor(25*s*door)})`;
+  }
+  if (cellType === 10) {
+    return `rgb(${Math.floor(200*s)},${Math.floor(180*s)},${Math.floor(80*s)})`;
+  }
+  if (cellType === 11) {
+    return `rgb(${Math.floor(230*s)},${Math.floor(220*s)},${Math.floor(190*s)})`;
+  }
+  if (cellType === 12) {
+    return `rgb(${Math.floor(255*s)},${Math.floor(215*s)},${Math.floor(0*s)})`;
+  }
+  const stripe = Math.floor(wallX * 8) % 2 === 0 ? 1 : 0.85;
+  return `rgb(${Math.floor(90*s*stripe)},${Math.floor(65*s*stripe)},${Math.floor(50*s*stripe)})`;
+}
+
+// ===== СВЕТ =====
+function getLightAt(x, y) {
+  let light = 0;
+  for (const lamp of lamps) {
+    if (!lamp.on) continue;
+    const d = Math.hypot(lamp.x - x, lamp.y - y);
+    light += lamp.power / (1 + d * d * 0.5);
+  }
+  return Math.min(1.2, light);
 }
 
 // ===== RAYCASTING =====
-let lastHitDist = 0;
 function castRays() {
   const numRays = Math.min(W, 400);
   const step = W / numRays;
   const rayW = step + 1;
   const horizon = H / 2 + player.pitch;
-  lastHitDist = 999;
+  const zbuffer = new Array(numRays);
 
   for (let i = 0; i < numRays; i++) {
     const screenX = i * step;
     const rayAngle = player.dir - player.fov / 2 + (i / numRays) * player.fov;
     const sin = Math.sin(rayAngle), cos = Math.cos(rayAngle);
 
-    let dist = 0.01, hit = false, side = 0, cellType = 1, wallX = 0;
+    let dist = 0.01, hit = false, side = 0, cellType = 1, wallX = 0, doorProgress = 0;
     const stepSize = 0.02;
 
     while (!hit && dist < 20) {
@@ -340,9 +650,16 @@ function castRays() {
       const y = player.y + sin * dist;
       const mx = Math.floor(x), my = Math.floor(y);
       if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) { hit = true; break; }
-      if (map[my][mx] > 0) {
+      const cell = map[my][mx];
+      if (cell > 0 && cell !== 8 && cell !== 12) {
+        if (cell === 2 || cell === 13) {
+          const key = `${mx},${my}`;
+          const door = doors[key];
+          if (door && door.progress > 0.5) { dist += stepSize; continue; }
+          doorProgress = door ? door.progress : 0;
+        }
         hit = true;
-        cellType = map[my][mx];
+        cellType = cell;
         side = Math.floor(x - cos * stepSize) !== mx ? 0 : 1;
         wallX = side === 0 ? (y - Math.floor(y)) : (x - Math.floor(x));
       } else {
@@ -350,21 +667,85 @@ function castRays() {
       }
     }
 
-    if (i === Math.floor(numRays / 2)) lastHitDist = dist;
+    zbuffer[i] = dist;
 
     const correctedDist = Math.max(0.1, dist * Math.cos(rayAngle - player.dir));
     const wallH = Math.min(H * 4, (H / correctedDist) * 0.9);
     const y0 = horizon - wallH / 2;
 
-    let shade = Math.max(0.15, 1 - correctedDist / 10);
+    let shade = Math.max(0.15, 1 - correctedDist / 12);
     if (side === 1) shade *= 0.75;
 
-    ctx.fillStyle = wallColor(cellType, shade, wallX);
+    // свет от ламп
+    const hitX = player.x + cos * dist;
+    const hitY = player.y + sin * dist;
+    const light = getLightAt(hitX, hitY);
+    shade = Math.min(1.5, shade + light);
+
+    ctx.fillStyle = wallColor(cellType, shade, wallX, doorProgress);
     ctx.fillRect(screenX, y0, rayW, wallH);
+
+    // фонарик: яркое пятно в центре
+    if (player.flashlight && player.battery > 0) {
+      const centerDist = Math.abs(i - numRays / 2) / (numRays / 2);
+      const beam = Math.max(0, 1 - centerDist * 2.5);
+      ctx.fillStyle = `rgba(255,240,180,${beam * 0.35})`;
+      ctx.fillRect(screenX, y0, rayW, wallH);
+    }
+
+    if (cellType !== 5 && cellType !== 7 && cellType !== 3 && cellType !== 10 && cellType !== 11) {
+      ctx.fillStyle = `rgba(0,0,0,${0.4 * shade})`;
+      ctx.fillRect(screenX, y0 + wallH - wallH * 0.06, rayW, wallH * 0.06);
+    }
   }
+
+  return zbuffer;
 }
 
-function update() {
+// ===== СПРАЙТ МОНСТРА =====
+function drawMonster(zbuffer, horizon) {
+  if (!monsterActive || !monster || !monster.visible) return;
+
+  const dx = monster.x - player.x;
+  const dy = monster.y - player.y;
+  const dist = Math.hypot(dx, dy);
+
+  let angle = Math.atan2(dy, dx) - player.dir;
+  while (angle < -Math.PI) angle += Math.PI * 2;
+  while (angle > Math.PI) angle -= Math.PI * 2;
+
+  if (Math.abs(angle) > player.fov / 2 + 0.2) return;
+
+  const screenX = (0.5 + angle / player.fov) * W;
+  const correctedDist = dist * Math.cos(angle);
+  const size = Math.min(H * 2, (H / correctedDist) * 0.8);
+  const y0 = horizon - size / 2;
+
+  // проверка zbuffer
+  const rayIndex = Math.floor((screenX / W) * zbuffer.length);
+  if (rayIndex >= 0 && rayIndex < zbuffer.length && zbuffer[rayIndex] < correctedDist) return;
+
+  // рисуем силуэт
+  const alpha = Math.max(0.3, 1 - correctedDist / 10);
+  ctx.fillStyle = `rgba(10,0,0,${alpha})`;
+  ctx.beginPath();
+  ctx.ellipse(screenX, y0 + size * 0.5, size * 0.25, size * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // глаза
+  ctx.fillStyle = `rgba(255,0,0,${alpha})`;
+  ctx.beginPath();
+  ctx.arc(screenX - size * 0.08, y0 + size * 0.35, size * 0.03, 0, Math.PI * 2);
+  ctx.arc(screenX + size * 0.08, y0 + size * 0.35, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ===== ОБНОВЛЕНИЕ =====
+let stepTimer = 0;
+function update(dt) {
+  updateDoors();
+  updateMonster();
+
   let mx = moveInput.x, my = -moveInput.y;
   if (keys['w']) my = 1;
   if (keys['s']) my = -1;
@@ -373,49 +754,98 @@ function update() {
   if (keys['arrowleft']) player.dir -= 0.04;
   if (keys['arrowright']) player.dir += 0.04;
 
+  const moving = Math.abs(mx) > 0.1 || Math.abs(my) > 0.1;
+
   const sin = Math.sin(player.dir), cos = Math.cos(player.dir);
   const nx = player.x + (cos * my - sin * mx) * player.speed;
   const ny = player.y + (sin * my + cos * mx) * player.speed;
 
-  if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
-  if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx;
+  if (!isSolid(nx, player.y)) player.x = nx;
+  if (!isSolid(player.x, ny)) player.y = ny;
+
+  // шаги
+  if (moving) {
+    stepTimer += dt;
+    if (stepTimer > 0.4) { playFootstep(); stepTimer = 0; }
+    // разряд батареи
+    if (player.flashlight) player.battery = Math.max(0, player.battery - dt * 0.005);
+  }
+
+  // подсказка
+  let hint = '';
+  const fcos = Math.cos(player.dir), fsin = Math.sin(player.dir);
+  for (let d = 0.5; d < 1.6; d += 0.2) {
+    const x = Math.floor(player.x + fcos * d), y = Math.floor(player.y + fsin * d);
+    if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) continue;
+    const cell = map[y][x];
+    const key = `${x},${y}`;
+    if (cell === 2) { const dd = doors[key]; hint = dd && dd.open ? 'E — закрыть дверь' : 'E — открыть дверь'; break; }
+    if (cell === 13) { hint = hasKey ? 'E — открыть ключом' : '🔒 Заперто'; break; }
+    if (cell === 3) { hint = 'E — прикоснуться к окну'; break; }
+    if (cell === 5) { hint = 'E — посмотреть в окно'; break; }
+    if (cell === 7) { hint = 'E — посмотреть на монитор'; break; }
+    if (cell === 10) { hint = 'E — переключить лампу'; break; }
+    if (cell === 11) { hint = 'E — прочитать записку'; break; }
+    if (cell === 12) { hint = 'E — взять ключ'; break; }
+  }
+  interactEl.textContent = hint;
+  interactEl.style.opacity = hint ? 1 : 0;
 }
 
-function loop() {
-  update();
+// ===== ЦИКЛ =====
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.1, (now - lastTime) / 1000);
+  lastTime = now;
+  gameTime += dt;
+
+  update(dt);
 
   const horizon = H / 2 + player.pitch;
 
+  // Потолок
   const ceilGrad = ctx.createLinearGradient(0, 0, 0, Math.max(1, horizon));
-  ceilGrad.addColorStop(0, '#0a0a0f');
-  ceilGrad.addColorStop(1, '#1a1515');
+  ceilGrad.addColorStop(0, '#050505');
+  ceilGrad.addColorStop(1, '#12100e');
   ctx.fillStyle = ceilGrad;
   ctx.fillRect(0, 0, W, Math.max(0, horizon));
 
+  // Пол
   const floorGrad = ctx.createLinearGradient(0, Math.max(0, horizon), 0, H);
-  floorGrad.addColorStop(0, '#1a1008');
-  floorGrad.addColorStop(1, '#0a0503');
+  floorGrad.addColorStop(0, '#15100a');
+  floorGrad.addColorStop(1, '#050302');
   ctx.fillStyle = floorGrad;
   ctx.fillRect(0, Math.max(0, horizon), W, H - Math.max(0, horizon));
 
-  castRays();
+  const zbuffer = castRays();
+  drawMonster(zbuffer, horizon);
+
+  // фонарик — затемнение по краям
+  if (player.flashlight && player.battery > 0) {
+    const grad = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.7);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.7)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
 
   debugEl.textContent =
     `x:${player.x.toFixed(2)} y:${player.y.toFixed(2)}\n` +
     `dir:${(player.dir*57.3).toFixed(0)}°\n` +
-    `стена:${lastHitDist.toFixed(2)} м\n` +
-    `клетка:${map[Math.floor(player.y)][Math.floor(player.x)]}\n` +
-    `экран:${W}×${H}`;
+    `заряд:${(player.battery*100).toFixed(0)}%`;
 
-  if (Math.random() < 0.02) {
+  if (Math.random() < 0.015) {
     const flash = document.getElementById('flash');
     flash.style.opacity = 0.05 + Math.random() * 0.1;
     setTimeout(() => flash.style.opacity = 0, 100);
   }
 
+  // случайный шёпот
+  if (monsterActive && Math.random() < 0.005) playWhisper();
+
   requestAnimationFrame(loop);
 }
-loop();
+requestAnimationFrame(loop);
 </script>
 </body>
- </html>
+</html>
