@@ -2,20 +2,28 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Окно смерти</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
   canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
 
   #ui {
     position: fixed; inset: 0; pointer-events: none;
     display: flex; flex-direction: column; justify-content: space-between;
-    padding: 20px; color: #8a0000; text-shadow: 0 0 10px #ff0000;
+    padding: 15px; color: #8a0000; text-shadow: 0 0 10px #ff0000;
+    padding-top: env(safe-area-inset-top, 15px);
   }
-  #title { font-size: 14px; letter-spacing: 4px; opacity: 0.6; }
-  #hint { font-size: 12px; opacity: 0.5; text-align: center; }
+  #title { font-size: 12px; letter-spacing: 4px; opacity: 0.6; }
+  #hint { font-size: 10px; opacity: 0.5; text-align: center; }
+
+  #debug {
+    position: fixed; top: 50px; left: 10px;
+    color: #0f0; font-size: 10px; font-family: monospace;
+    background: rgba(0,0,0,0.7); padding: 4px 6px; border-radius: 4px;
+    pointer-events: none; z-index: 100; line-height: 1.4;
+  }
 
   .joy {
     position: fixed; width: 130px; height: 130px;
@@ -31,10 +39,10 @@
   }
 
   #actionBtn {
-    position: fixed; right: 30px; bottom: 180px;
-    width: 80px; height: 80px; border-radius: 50%;
+    position: fixed; right: 20px; bottom: 140px;
+    width: 70px; height: 70px; border-radius: 50%;
     background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4);
-    color: #ff3333; font-size: 12px; letter-spacing: 2px;
+    color: #ff3333; font-size: 11px; letter-spacing: 2px;
     display: flex; align-items: center; justify-content: center;
     pointer-events: auto; touch-action: none; opacity: 0.7;
     text-shadow: 0 0 8px #ff0000;
@@ -73,6 +81,7 @@
   <div id="hint">Левая половина — движение • Правая — обзор</div>
 </div>
 
+<div id="debug">загрузка...</div>
 <div id="crosshair"></div>
 <div id="vignette"></div>
 <div id="flash"></div>
@@ -85,13 +94,20 @@
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+const debugEl = document.getElementById('debug');
+
 let W, H;
-function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  // пересоздаём градиенты при ресайзе не нужно — они в loop
+}
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 100));
 resize();
 
 // ===== КАРТА =====
-// 1 = стена-кирпич, 2 = дверь, 3 = окно смерти, 4 = стена-доски
+// 0 = пусто, 1 = кирпич, 2 = дверь, 3 = окно смерти, 4 = доски
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -111,9 +127,10 @@ const map = [
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
+// Ставим игрока в центр большой открытой зоны (координаты 5.5, 8.5)
 const player = {
-  x: 2.5, y: 2.5,
-  dir: 0,
+  x: 5.5, y: 11.5,
+  dir: -Math.PI / 2,   // смотрим на север (вверх по карте)
   pitch: 0,
   fov: Math.PI / 3,
   speed: 0.045
@@ -207,36 +224,38 @@ function showMsg(text) {
   el._t = setTimeout(() => el.style.opacity = 0, 1500);
 }
 
-// ===== ФУНКЦИЯ ЦВЕТА СТЕНЫ (текстура через полосы) =====
+// ===== ЦВЕТ СТЕНЫ =====
 function wallColor(cellType, shade, wallX) {
-  // wallX — координата попадания вдоль стены (0..1), для полос
-  const stripe = Math.sin(wallX * 40) > 0 ? 1 : 0.75;
-  const s = shade * stripe;
-  if (cellType === 2) return `rgb(${Math.floor(120*s)},${Math.floor(80*s)},${Math.floor(40*s)})`;   // дверь
-  if (cellType === 3) return `rgb(${Math.floor(200*s)},${Math.floor(30*s)},${Math.floor(30*s)})`;  // окно
-  if (cellType === 4) return `rgb(${Math.floor(70*s)},${Math.floor(50*s)},${Math.floor(35*s)})`;   // доски
+  const s = shade;
+  if (cellType === 2) return `rgb(${Math.floor(140*s)},${Math.floor(90*s)},${Math.floor(45*s)})`;
+  if (cellType === 3) return `rgb(${Math.floor(220*s)},${Math.floor(30*s)},${Math.floor(30*s)})`;
+  if (cellType === 4) {
+    const stripe = Math.floor(wallX * 12) % 2 === 0 ? 1 : 0.7;
+    return `rgb(${Math.floor(80*s*stripe)},${Math.floor(55*s*stripe)},${Math.floor(35*s*stripe)})`;
+  }
   // кирпич: горизонтальные ряды
-  const row = Math.floor(wallX * 20) % 2 === 0 ? 1 : 0.8;
-  return `rgb(${Math.floor(90*shade*row)},${Math.floor(45*shade*row)},${Math.floor(35*shade*row)})`;
+  const row = Math.floor(wallX * 16) % 2 === 0 ? 1 : 0.75;
+  return `rgb(${Math.floor(110*s*row)},${Math.floor(55*s*row)},${Math.floor(40*s*row)})`;
 }
 
 // ===== RAYCASTING =====
+let lastHitDist = 0;
 function castRays() {
   const numRays = Math.min(W, 400);
   const step = W / numRays;
   const rayW = step + 1;
   const horizon = H / 2 + player.pitch;
+  lastHitDist = 999;
 
   for (let i = 0; i < numRays; i++) {
     const screenX = i * step;
     const rayAngle = player.dir - player.fov / 2 + (i / numRays) * player.fov;
     const sin = Math.sin(rayAngle), cos = Math.cos(rayAngle);
 
-    let dist = 0, hit = false, side = 0, cellType = 1, wallX = 0;
+    let dist = 0.01, hit = false, side = 0, cellType = 1, wallX = 0;
     const stepSize = 0.02;
 
     while (!hit && dist < 20) {
-      dist += stepSize;
       const x = player.x + cos * dist;
       const y = player.y + sin * dist;
       const mx = Math.floor(x), my = Math.floor(y);
@@ -244,29 +263,25 @@ function castRays() {
       if (map[my][mx] > 0) {
         hit = true;
         cellType = map[my][mx];
-        const prevX = player.x + cos * (dist - stepSize);
-        const prevY = player.y + sin * (dist - stepSize);
-        side = Math.floor(prevX) !== mx ? 0 : 1;
-        // координата вдоль стены для текстуры
+        side = Math.floor(x - cos * stepSize) !== mx ? 0 : 1;
         wallX = side === 0 ? (y - Math.floor(y)) : (x - Math.floor(x));
+      } else {
+        dist += stepSize;
       }
     }
 
-    const correctedDist = dist * Math.cos(rayAngle - player.dir);
-    const wallH = Math.min(H * 3, (H / correctedDist) * 0.9);
+    if (i === Math.floor(numRays / 2)) lastHitDist = dist;
+
+    const correctedDist = Math.max(0.1, dist * Math.cos(rayAngle - player.dir));
+    const wallH = Math.min(H * 4, (H / correctedDist) * 0.9);
     const y0 = horizon - wallH / 2;
 
-    let shade = Math.max(0.12, 1 - correctedDist / 10);
+    let shade = Math.max(0.15, 1 - correctedDist / 10);
     if (side === 1) shade *= 0.75;
 
     ctx.fillStyle = wallColor(cellType, shade, wallX);
     ctx.fillRect(screenX, y0, rayW, wallH);
-
-    // Тёмная полоса внизу стены — имитация плинтуса
-    ctx.fillStyle = `rgba(0,0,0,${0.5 * shade})`;
-    ctx.fillRect(screenX, y0 + wallH - wallH * 0.08, rayW, wallH * 0.08);
   }
-  return horizon;
 }
 
 function update() {
@@ -293,24 +308,31 @@ function update() {
 function loop() {
   update();
 
-  // Пол и потолок — раздельно, чтобы был "интерьер"
   const horizon = H / 2 + player.pitch;
 
-  // Потолок — тёмно-серый
-  const ceilGrad = ctx.createLinearGradient(0, 0, 0, horizon);
-  ceilGrad.addColorStop(0, '#050505');
+  // Потолок
+  const ceilGrad = ctx.createLinearGradient(0, 0, 0, Math.max(1, horizon));
+  ceilGrad.addColorStop(0, '#0a0a0f');
   ceilGrad.addColorStop(1, '#1a1515');
   ctx.fillStyle = ceilGrad;
-  ctx.fillRect(0, 0, W, horizon);
+  ctx.fillRect(0, 0, W, Math.max(0, horizon));
 
-  // Пол — тёмно-коричневый
-  const floorGrad = ctx.createLinearGradient(0, horizon, 0, H);
+  // Пол
+  const floorGrad = ctx.createLinearGradient(0, Math.max(0, horizon), 0, H);
   floorGrad.addColorStop(0, '#1a1008');
   floorGrad.addColorStop(1, '#0a0503');
   ctx.fillStyle = floorGrad;
-  ctx.fillRect(0, horizon, W, H - horizon);
+  ctx.fillRect(0, Math.max(0, horizon), W, H - Math.max(0, horizon));
 
   castRays();
+
+  // Отладка
+  debugEl.textContent =
+    `x:${player.x.toFixed(2)} y:${player.y.toFixed(2)}\n` +
+    `dir:${(player.dir*57.3).toFixed(0)}°\n` +
+    `стена:${lastHitDist.toFixed(2)} м\n` +
+    `клетка:${map[Math.floor(player.y)][Math.floor(player.x)]}\n` +
+    `экран:${W}×${H}`;
 
   if (Math.random() < 0.02) {
     const flash = document.getElementById('flash');
