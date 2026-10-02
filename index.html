@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Окно смерти</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,51 +28,74 @@
     pointer-events: none; z-index: 100; line-height: 1.4;
   }
 
-  .joy {
-    position: fixed; width: 130px; height: 130px;
-    border-radius: 50%; border: 2px solid rgba(255,0,0,0.25);
-    pointer-events: none; opacity: 0; transition: opacity 0.15s;
-    transform: translate(-50%, -50%);
+  /* Джойстик движения — появляется только когда тронул левую половину */
+  #moveZone {
+    position: fixed; left: 0; top: 0; width: 50%; height: 100%;
+    pointer-events: auto; z-index: 10; touch-action: none;
   }
-  .joy.active { opacity: 1; }
-  .stick {
-    position: absolute; width: 50px; height: 50px; border-radius: 50%;
-    background: rgba(255,0,0,0.35); top: 40px; left: 40px;
-    box-shadow: 0 0 15px rgba(255,0,0,0.5);
+  #lookZone {
+    position: fixed; right: 0; top: 0; width: 50%; height: 100%;
+    pointer-events: auto; z-index: 10; touch-action: none;
+  }
+
+  #joy {
+    position: fixed; width: 140px; height: 140px;
+    border-radius: 50%; border: 2px solid rgba(255,0,0,0.3);
+    pointer-events: none; opacity: 0; transition: opacity 0.15s;
+    transform: translate(-50%, -50%); z-index: 11;
+  }
+  #joy.active { opacity: 1; }
+  #joyStick {
+    position: absolute; width: 55px; height: 55px; border-radius: 50%;
+    background: rgba(255,0,0,0.4); top: 42px; left: 42px;
+    box-shadow: 0 0 20px rgba(255,0,0,0.6);
   }
 
   #actionBtn {
-    position: fixed; right: 20px; bottom: 140px;
-    width: 70px; height: 70px; border-radius: 50%;
+    position: fixed; right: 25px; bottom: 130px;
+    width: 75px; height: 75px; border-radius: 50%;
     background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4);
     color: #ff3333; font-size: 11px; letter-spacing: 2px;
     display: flex; align-items: center; justify-content: center;
     pointer-events: auto; touch-action: none; opacity: 0.7;
-    text-shadow: 0 0 8px #ff0000;
+    text-shadow: 0 0 8px #ff0000; z-index: 20;
   }
-  #actionBtn:active { background: rgba(255,0,0,0.4); opacity: 1; }
+  #actionBtn:active { background: rgba(255,0,0,0.5); opacity: 1; }
+
+  #fsBtn {
+    position: fixed; right: 20px; top: 20px;
+    width: 44px; height: 44px; border-radius: 8px;
+    background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.4);
+    color: #ff3333; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto; touch-action: none; opacity: 0.6;
+    z-index: 20;
+  }
+  #fsBtn:active { opacity: 1; }
 
   #crosshair {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
     width: 6px; height: 6px; border-radius: 50%;
     background: rgba(255,50,50,0.6); pointer-events: none;
-    box-shadow: 0 0 8px #ff0000;
+    box-shadow: 0 0 8px #ff0000; z-index: 5;
   }
 
   #vignette {
     position: fixed; inset: 0; pointer-events: none;
     background: radial-gradient(circle, transparent 35%, rgba(0,0,0,0.95) 100%);
+    z-index: 6;
   }
   #flash {
     position: fixed; inset: 0; pointer-events: none;
     background: #ff0000; opacity: 0; transition: opacity 0.15s;
+    z-index: 7;
   }
 
   #msg {
     position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
     color: #ff4444; font-size: 16px; letter-spacing: 2px;
     text-shadow: 0 0 12px #ff0000; opacity: 0; transition: opacity 0.3s;
-    pointer-events: none;
+    pointer-events: none; z-index: 30;
   }
 </style>
 </head>
@@ -78,8 +104,11 @@
 
 <div id="ui">
   <div id="title">ОКНО СМЕРТИ</div>
-  <div id="hint">Левая половина — движение • Правая — обзор</div>
+  <div id="hint">Слева — движение • Справа — обзор</div>
 </div>
+
+<div id="moveZone"></div>
+<div id="lookZone"></div>
 
 <div id="debug">загрузка...</div>
 <div id="crosshair"></div>
@@ -87,9 +116,9 @@
 <div id="flash"></div>
 <div id="msg"></div>
 
-<div class="joy" id="joyLeft"><div class="stick" id="stickL"></div></div>
-<div class="joy" id="joyRight"><div class="stick" id="stickR"></div></div>
+<div id="joy"><div id="joyStick"></div></div>
 <div id="actionBtn">E</div>
+<div id="fsBtn">⛶</div>
 
 <script>
 const canvas = document.getElementById('game');
@@ -100,14 +129,12 @@ let W, H;
 function resize() {
   W = canvas.width = window.innerWidth;
   H = canvas.height = window.innerHeight;
-  // пересоздаём градиенты при ресайзе не нужно — они в loop
 }
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 100));
 resize();
 
 // ===== КАРТА =====
-// 0 = пусто, 1 = кирпич, 2 = дверь, 3 = окно смерти, 4 = доски
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -127,15 +154,15 @@ const map = [
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
-// Ставим игрока в центр большой открытой зоны (координаты 5.5, 8.5)
 const player = {
   x: 5.5, y: 11.5,
-  dir: -Math.PI / 2,   // смотрим на север (вверх по карте)
+  dir: -Math.PI / 2,
   pitch: 0,
   fov: Math.PI / 3,
   speed: 0.045
 };
 
+// ===== УПРАВЛЕНИЕ =====
 const keys = {};
 window.addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
@@ -152,53 +179,90 @@ document.addEventListener('mousemove', e => {
   }
 });
 
-// ===== СТИКИ =====
+// ===== СВАЙП-ОБЗОР (правая половина) =====
+const lookZone = document.getElementById('lookZone');
+let lookTouchId = null;
+let lastLookX = 0, lastLookY = 0;
+
+lookZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (lookTouchId !== null) return;
+  const t = e.changedTouches[0];
+  lookTouchId = t.identifier;
+  lastLookX = t.clientX;
+  lastLookY = t.clientY;
+}, { passive: false });
+
+lookZone.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier === lookTouchId) {
+      const dx = t.clientX - lastLookX;
+      const dy = t.clientY - lastLookY;
+      lastLookX = t.clientX;
+      lastLookY = t.clientY;
+      player.dir += dx * 0.005;
+      player.pitch -= dy * 0.8;
+      player.pitch = Math.max(-H * 0.25, Math.min(H * 0.25, player.pitch));
+    }
+  }
+}, { passive: false });
+
+lookZone.addEventListener('touchend', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier === lookTouchId) lookTouchId = null;
+  }
+}, { passive: false });
+
+// ===== ДЖОЙСТИК ДВИЖЕНИЯ (левая половина) =====
+const moveZone = document.getElementById('moveZone');
+const joyEl = document.getElementById('joy');
+const joyStick = document.getElementById('joyStick');
+let moveTouchId = null;
+let moveOrigin = { x: 0, y: 0 };
+const MAX_DIST = 50;
 let moveInput = { x: 0, y: 0 };
-let lookInput = { x: 0, y: 0 };
-const joyL = document.getElementById('joyLeft');
-const joyR = document.getElementById('joyRight');
-const stickL = document.getElementById('stickL');
-const stickR = document.getElementById('stickR');
-let touchL = null, touchR = null;
-let originL = { x: 0, y: 0 }, originR = { x: 0, y: 0 };
-const MAX_DIST = 45;
 
-canvas.addEventListener('touchstart', e => {
+moveZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (moveTouchId !== null) return;
+  const t = e.changedTouches[0];
+  moveTouchId = t.identifier;
+  moveOrigin = { x: t.clientX, y: t.clientY };
+  joyEl.style.left = t.clientX + 'px';
+  joyEl.style.top = t.clientY + 'px';
+  joyEl.classList.add('active');
+  joyStick.style.transform = 'translate(0,0)';
+}, { passive: false });
+
+moveZone.addEventListener('touchmove', e => {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    const isLeft = t.clientX < W / 2;
-    const joy = isLeft ? joyL : joyR;
-    joy.style.left = t.clientX + 'px';
-    joy.style.top = t.clientY + 'px';
-    joy.classList.add('active');
-    if (isLeft && touchL === null) { touchL = t.identifier; originL = { x: t.clientX, y: t.clientY }; }
-    else if (!isLeft && touchR === null) { touchR = t.identifier; originR = { x: t.clientX, y: t.clientY }; }
+    if (t.identifier === moveTouchId) {
+      let dx = t.clientX - moveOrigin.x;
+      let dy = t.clientY - moveOrigin.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > MAX_DIST) { dx = dx / dist * MAX_DIST; dy = dy / dist * MAX_DIST; }
+      joyStick.style.transform = `translate(${dx}px, ${dy}px)`;
+      moveInput.x = dx / MAX_DIST;
+      moveInput.y = dy / MAX_DIST;
+    }
   }
 }, { passive: false });
 
-canvas.addEventListener('touchmove', e => {
+moveZone.addEventListener('touchend', e => {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    if (t.identifier === touchL) updateStick(t, originL, stickL, moveInput);
-    else if (t.identifier === touchR) updateStick(t, originR, stickR, lookInput);
+    if (t.identifier === moveTouchId) {
+      moveTouchId = null;
+      joyEl.classList.remove('active');
+      joyStick.style.transform = 'translate(0,0)';
+      moveInput.x = 0;
+      moveInput.y = 0;
+    }
   }
 }, { passive: false });
-
-canvas.addEventListener('touchend', e => {
-  e.preventDefault();
-  for (const t of e.changedTouches) {
-    if (t.identifier === touchL) { touchL = null; joyL.classList.remove('active'); stickL.style.transform = 'translate(0,0)'; moveInput.x = 0; moveInput.y = 0; }
-    else if (t.identifier === touchR) { touchR = null; joyR.classList.remove('active'); stickR.style.transform = 'translate(0,0)'; lookInput.x = 0; lookInput.y = 0; }
-  }
-}, { passive: false });
-
-function updateStick(t, origin, stick, input) {
-  let dx = t.clientX - origin.x, dy = t.clientY - origin.y;
-  const dist = Math.hypot(dx, dy);
-  if (dist > MAX_DIST) { dx = dx / dist * MAX_DIST; dy = dy / dist * MAX_DIST; }
-  stick.style.transform = `translate(${dx}px, ${dy}px)`;
-  input.x = dx / MAX_DIST; input.y = dy / MAX_DIST;
-}
 
 // ===== КНОПКА ДЕЙСТВИЯ =====
 document.getElementById('actionBtn').addEventListener('touchstart', e => { e.preventDefault(); doAction(); }, { passive: false });
@@ -224,6 +288,23 @@ function showMsg(text) {
   el._t = setTimeout(() => el.style.opacity = 0, 1500);
 }
 
+// ===== ПОЛНОЭКРАННЫЙ РЕЖИМ =====
+document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
+document.getElementById('fsBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFullscreen(); }, { passive: false });
+
+function toggleFullscreen() {
+  const el = document.documentElement;
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+  setTimeout(resize, 300);
+}
+
 // ===== ЦВЕТ СТЕНЫ =====
 function wallColor(cellType, shade, wallX) {
   const s = shade;
@@ -233,7 +314,6 @@ function wallColor(cellType, shade, wallX) {
     const stripe = Math.floor(wallX * 12) % 2 === 0 ? 1 : 0.7;
     return `rgb(${Math.floor(80*s*stripe)},${Math.floor(55*s*stripe)},${Math.floor(35*s*stripe)})`;
   }
-  // кирпич: горизонтальные ряды
   const row = Math.floor(wallX * 16) % 2 === 0 ? 1 : 0.75;
   return `rgb(${Math.floor(110*s*row)},${Math.floor(55*s*row)},${Math.floor(40*s*row)})`;
 }
@@ -285,10 +365,6 @@ function castRays() {
 }
 
 function update() {
-  player.dir += lookInput.x * 0.05;
-  player.pitch += lookInput.y * 3;
-  player.pitch = Math.max(-H * 0.25, Math.min(H * 0.25, player.pitch));
-
   let mx = moveInput.x, my = -moveInput.y;
   if (keys['w']) my = 1;
   if (keys['s']) my = -1;
@@ -310,14 +386,12 @@ function loop() {
 
   const horizon = H / 2 + player.pitch;
 
-  // Потолок
   const ceilGrad = ctx.createLinearGradient(0, 0, 0, Math.max(1, horizon));
   ceilGrad.addColorStop(0, '#0a0a0f');
   ceilGrad.addColorStop(1, '#1a1515');
   ctx.fillStyle = ceilGrad;
   ctx.fillRect(0, 0, W, Math.max(0, horizon));
 
-  // Пол
   const floorGrad = ctx.createLinearGradient(0, Math.max(0, horizon), 0, H);
   floorGrad.addColorStop(0, '#1a1008');
   floorGrad.addColorStop(1, '#0a0503');
@@ -326,7 +400,6 @@ function loop() {
 
   castRays();
 
-  // Отладка
   debugEl.textContent =
     `x:${player.x.toFixed(2)} y:${player.y.toFixed(2)}\n` +
     `dir:${(player.dir*57.3).toFixed(0)}°\n` +
@@ -345,4 +418,4 @@ function loop() {
 loop();
 </script>
 </body>
-</html>
+ </html>
