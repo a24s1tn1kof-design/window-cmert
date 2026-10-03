@@ -22,28 +22,26 @@
   #joyStick { position: absolute; width: 55px; height: 55px; border-radius: 50%; background: rgba(255,0,0,0.4); top: 42px; left: 42px; box-shadow: 0 0 20px rgba(255,0,0,0.6); }
 
   #btnStack { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; z-index: 20; }
-  #actionBtn { width: 75px; height: 75px; border-radius: 50%; background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4); color: #ff3333; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.8; text-shadow: 0 0 8px #ff0000; }
+  #actionBtn { width: 75px; height: 75px; border-radius: 50%; background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4); color: #ff3333; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.8; }
   #actionBtn:active { background: rgba(255,0,0,0.5); opacity: 1; }
   #lightBtn { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,200,0,0.15); border: 2px solid rgba(255,200,0,0.4); color: #ffcc33; font-size: 22px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.7; }
-  #lightBtn:active { background: rgba(255,200,0,0.5); opacity: 1; }
   #lightBtn.on { background: rgba(255,200,0,0.5); }
 
   #fsBtn { position: fixed; right: 20px; top: 20px; width: 44px; height: 44px; border-radius: 8px; background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.4); color: #ff3333; font-size: 20px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.6; z-index: 20; }
-  #fsBtn:active { opacity: 1; }
 
   #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border-radius: 50%; background: rgba(255,50,50,0.6); pointer-events: none; box-shadow: 0 0 8px #ff0000; z-index: 5; }
-  #vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle, transparent 35%, rgba(0,0,0,0.95) 100%); z-index: 6; }
+  #vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle, transparent 45%, rgba(0,0,0,0.75) 100%); z-index: 6; }
   #flash { position: fixed; inset: 0; pointer-events: none; background: #ff0000; opacity: 0; transition: opacity 0.15s; z-index: 7; }
 
   #msg { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); color: #ff4444; font-size: 16px; letter-spacing: 2px; text-shadow: 0 0 12px #ff0000; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 30; text-align: center; padding: 0 20px; }
-  #note { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(20,10,5,0.95); border: 2px solid #8a0000; color: #d4a373; font-size: 14px; line-height: 1.6; letter-spacing: 1px; padding: 25px 30px; max-width: 90%; width: 340px; text-shadow: 0 0 8px rgba(255,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 40; }
+  #note { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(20,10,5,0.95); border: 2px solid #8a0000; color: #d4a373; font-size: 14px; line-height: 1.6; padding: 25px 30px; max-width: 90%; width: 340px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 40; }
   #note.show { opacity: 1; }
   #note h3 { color: #ff3333; margin-bottom: 12px; font-size: 16px; letter-spacing: 3px; }
 
   #interact { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); color: #ff8888; font-size: 13px; letter-spacing: 2px; text-shadow: 0 0 10px #ff0000; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 30; text-align: center; }
-  #inventory { position: fixed; top: 20px; left: 20px; color: #ffcc33; font-size: 14px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,200,0,0.6); pointer-events: none; z-index: 30; }
+  #inventory { position: fixed; top: 20px; left: 20px; color: #ffcc33; font-size: 14px; letter-spacing: 2px; pointer-events: none; z-index: 30; }
 
-  #rotateOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; color: #ff3333; font-size: 16px; letter-spacing: 3px; text-shadow: 0 0 15px #ff0000; text-align: center; padding: 30px; }
+  #rotateOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; color: #ff3333; font-size: 16px; letter-spacing: 3px; text-align: center; padding: 30px; }
   #rotateOverlay .icon { font-size: 70px; margin-bottom: 25px; animation: rotateHint 2s infinite ease-in-out; }
   @keyframes rotateHint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
   @media (orientation: portrait) {
@@ -54,12 +52,10 @@
 </head>
 <body>
 <canvas id="game"></canvas>
-
 <div id="ui">
   <div id="title">ОКНО СМЕРТИ</div>
   <div id="hint">Слева — движение • Справа — обзор</div>
 </div>
-
 <div id="moveZone"></div>
 <div id="lookZone"></div>
 <div id="crosshair"></div>
@@ -70,14 +66,11 @@
 <div id="interact"></div>
 <div id="inventory"></div>
 <div id="joy"><div id="joyStick"></div></div>
-
 <div id="btnStack">
   <div id="lightBtn">🔦</div>
   <div id="actionBtn">E</div>
 </div>
-
 <div id="fsBtn">⛶</div>
-
 <div id="rotateOverlay">
   <div class="icon">📱</div>
   <div>ПОВЕРНИТЕ УСТРОЙСТВО ГОРИЗОНТАЛЬНО</div>
@@ -105,56 +98,58 @@ function tryLockOrientation() {
   }
 }
 
-// ===== КАРТА ДОМА =====
+// ===== КАРТА ДОМА — МНОГО КОМНАТ =====
+// 0=пол, 1=обои, 2=дверь, 3=окно смерти, 5=окно,
+// 8=ковёр, 11=записка, 12=ключ, 13=запертая дверь
 const map = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,5,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,5,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,5,0,0,0,0,0,5,1,5,0,0,0,0,5,1,5,0,0,0,0,0,5,1],
+  [1,0,0,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,8,8,0,0,0,1],
+  [1,0,0,8,8,0,0,0,2,0,0,0,0,0,0,0,0,0,8,8,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1],
+  [1,5,0,0,0,0,0,0,1,5,0,0,0,0,5,1,0,0,0,0,0,0,5,1],
+  [1,0,0,0,0,0,0,0,2,0,0,8,8,0,0,2,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,8,8,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,1,1,2,1,1,1,1,0,0,0,0,0,0,0,1],
+  [1,5,0,0,0,0,0,0,1,5,0,0,0,0,5,1,5,0,0,0,0,0,5,1],
+  [1,0,0,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,8,8,0,0,0,1],
+  [1,0,0,8,8,0,0,0,2,0,0,0,0,0,0,0,0,0,8,8,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
+// Спрайты: фиксированные позиции в мире, фиксированный рост (в клетках)
 const sprites = [
-  { type: 'bed',        x: 2.5,  y: 2.5,  w: 1.6, h: 1.2 },
-  { type: 'nightstand', x: 1.5,  y: 2.5,  w: 0.6, h: 0.6 },
-  { type: 'lamp',       x: 1.5,  y: 2.5,  w: 0.35, h: 0.35, on: true, power: 0.7 },
-  { type: 'table',      x: 10.5, y: 3.5,  w: 2.2, h: 1.0 },
-  { type: 'computer',   x: 10.5, y: 3.0,  w: 1.1, h: 0.8 },
-  { type: 'chair',      x: 10.5, y: 4.8,  w: 0.7, h: 0.7 },
-  { type: 'lamp',       x: 12.2, y: 3.2,  w: 0.35, h: 0.35, on: true, power: 0.6 },
-  { type: 'sofa',       x: 16.5, y: 3.0,  w: 2.4, h: 1.2 },
-  { type: 'table',      x: 16.5, y: 5.0,  w: 1.5, h: 0.9 },
-  { type: 'shelf',      x: 18.5, y: 2.0,  w: 1.0, h: 0.6 },
-  { type: 'lamp',       x: 15.5, y: 2.0,  w: 0.35, h: 0.35, on: true, power: 0.6 },
-  { type: 'stove',      x: 2.0,  y: 12.5, w: 1.0, h: 1.0 },
-  { type: 'fridge',     x: 3.5,  y: 12.5, w: 1.0, h: 1.2 },
-  { type: 'table',      x: 5.0,  y: 13.0, w: 1.8, h: 1.0 },
-  { type: 'chair',      x: 5.0,  y: 14.3, w: 0.7, h: 0.7 },
-  { type: 'lamp',       x: 3.5,  y: 11.5, w: 0.35, h: 0.35, on: true, power: 0.7 },
-  { type: 'lamp',       x: 9.5,  y: 13.0, w: 0.35, h: 0.35, on: false, power: 0.5 },
-  { type: 'bed',        x: 16.5, y: 13.0, w: 1.6, h: 1.2 },
-  { type: 'nightstand', x: 15.3, y: 13.0, w: 0.6, h: 0.6 },
-  { type: 'lamp',       x: 15.3, y: 13.0, w: 0.35, h: 0.35, on: false, power: 0.5 },
-  { type: 'shelf',      x: 18.5, y: 14.0, w: 1.0, h: 0.6 },
+  { type: 'bed',        x: 2.5,  y: 2.5,  w: 1.4, h: 0.6 },
+  { type: 'nightstand', x: 1.3,  y: 2.5,  w: 0.5, h: 0.5 },
+  { type: 'lamp',       x: 1.3,  y: 2.5,  w: 0.25, h: 0.35, on: true, power: 0.8 },
+  { type: 'table',      x: 11.5, y: 2.8,  w: 1.8, h: 0.55 },
+  { type: 'computer',   x: 11.5, y: 2.5,  w: 0.9, h: 0.55 },
+  { type: 'chair',      x: 11.5, y: 3.8,  w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 13.0, y: 2.2,  w: 0.25, h: 0.35, on: true, power: 0.7 },
+  { type: 'sofa',       x: 19.5, y: 2.5,  w: 1.8, h: 0.7 },
+  { type: 'table',      x: 19.5, y: 4.2,  w: 1.2, h: 0.5 },
+  { type: 'lamp',       x: 18.0, y: 1.8,  w: 0.25, h: 0.35, on: true, power: 0.7 },
+  { type: 'stove',      x: 2.0,  y: 12.5, w: 0.9, h: 0.65 },
+  { type: 'fridge',     x: 3.3,  y: 12.5, w: 0.9, h: 1.0 },
+  { type: 'table',      x: 5.0,  y: 13.2, w: 1.4, h: 0.5 },
+  { type: 'chair',      x: 5.0,  y: 14.3, w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 3.2,  y: 11.3, w: 0.25, h: 0.35, on: true, power: 0.8 },
+  { type: 'shelf',      x: 9.5,  y: 13.5, w: 0.8, h: 0.7 },
+  { type: 'lamp',       x: 11.5, y: 13.5, w: 0.25, h: 0.35, on: true, power: 0.7 },
+  { type: 'bed',        x: 20.5, y: 12.5, w: 1.4, h: 0.6 },
+  { type: 'nightstand', x: 19.3, y: 12.5, w: 0.5, h: 0.5 },
+  { type: 'lamp',       x: 19.3, y: 12.5, w: 0.25, h: 0.35, on: true, power: 0.8 },
 ];
 
 const notes = {
-  '4,2': { title: 'ЗАПИСКА 1', text: '«Не выключай свет. Оно приходит, когда темно.»' },
-  '9,8': { title: 'ЗАПИСКА 2', text: '«Ключ от подвала — в шкафу в зале. Не открывай красную дверь.»' },
-  '13,12': { title: 'ЗАПИСКА 3', text: '«Оно смотрит через окно. Не подходи близко.»' }
+  '3,3': { title: 'ЗАПИСКА 1', text: '«Не выключай свет. Оно приходит, когда темно.»' },
+  '11,7': { title: 'ЗАПИСКА 2', text: '«Ключ от подвала — в шкафу. Не открывай красную дверь.»' },
+  '12,13': { title: 'ЗАПИСКА 3', text: '«Оно смотрит через окно. Не подходи близко.»' }
 };
 
 let hasKey = false;
@@ -171,13 +166,9 @@ for (let y = 0; y < MAP_H; y++) {
 }
 
 const player = {
-  x: 4.5, y: 2.5,
-  dir: 0,
-  pitch: 0,
-  fov: Math.PI / 3,
-  speed: 0.045,
-  flashlight: false,
-  battery: 1.0
+  x: 5.5, y: 2.5, dir: 0, pitch: 0,
+  fov: Math.PI / 3, speed: 0.045,
+  flashlight: false, battery: 1.0
 };
 
 // ===== ЗВУК =====
@@ -189,20 +180,17 @@ function initAudio() {
 document.addEventListener('touchstart', initAudio, { once: true });
 document.addEventListener('click', initAudio, { once: true });
 
-function playTone(freq, dur, type = 'sine', vol = 0.1) {
+function playTone(freq, dur, type='sine', vol=0.1) {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
+  osc.type = type; osc.frequency.value = freq;
   gain.gain.value = vol;
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + dur);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + dur);
 }
-function playFootstep() { playTone(80 + Math.random() * 40, 0.08, 'sine', 0.05); }
+function playFootstep() { playTone(80 + Math.random()*40, 0.08, 'sine', 0.05); }
 function playDoorCreak() {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
@@ -212,10 +200,8 @@ function playDoorCreak() {
   osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.6);
   gain.gain.value = 0.08;
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.6);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.6);
 }
 function playWhisper() {
   if (!audioCtx) return;
@@ -226,10 +212,8 @@ function playWhisper() {
   osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 1.2);
   gain.gain.value = 0.04;
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 1.2);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + 1.2);
 }
 
 // ===== УПРАВЛЕНИЕ =====
@@ -270,8 +254,7 @@ lookZone.addEventListener('touchmove', e => {
     if (t.identifier === lookTouchId) {
       const dx = t.clientX - lastLookX;
       const dy = t.clientY - lastLookY;
-      lastLookX = t.clientX;
-      lastLookY = t.clientY;
+      lastLookX = t.clientX; lastLookY = t.clientY;
       player.dir += dx * 0.005;
       player.pitch -= dy * 0.8;
       player.pitch = Math.max(-H * 0.25, Math.min(H * 0.25, player.pitch));
@@ -285,8 +268,7 @@ lookZone.addEventListener('touchend', e => {
     if (t.identifier === lookTouchId) lookTouchId = null;
   }
 }, { passive: false });
-
-// ===== ДЖОЙСТИК =====
+ // ===== ДЖОЙСТИК =====
 const moveZone = document.getElementById('moveZone');
 const joyEl = document.getElementById('joy');
 const joyStick = document.getElementById('joyStick');
@@ -314,7 +296,7 @@ moveZone.addEventListener('touchmove', e => {
       let dx = t.clientX - moveOrigin.x;
       let dy = t.clientY - moveOrigin.y;
       const dist = Math.hypot(dx, dy);
-      if (dist > MAX_DIST) { dx = dx / dist * MAX_DIST; dy = dy / dist * MAX_DIST; }
+      if (dist > MAX_DIST) { dx = dx/dist*MAX_DIST; dy = dy/dist*MAX_DIST; }
       joyStick.style.transform = `translate(${dx}px, ${dy}px)`;
       moveInput.x = dx / MAX_DIST;
       moveInput.y = dy / MAX_DIST;
@@ -329,8 +311,7 @@ moveZone.addEventListener('touchend', e => {
       moveTouchId = null;
       joyEl.classList.remove('active');
       joyStick.style.transform = 'translate(0,0)';
-      moveInput.x = 0;
-      moveInput.y = 0;
+      moveInput.x = 0; moveInput.y = 0;
     }
   }
 }, { passive: false });
@@ -360,24 +341,18 @@ function doAction() {
       door.open = !door.open;
       playDoorCreak();
       showMsg(door.open ? 'Дверь открывается...' : 'Дверь закрывается...');
-      if (door.open) {
-        doorOpenCount++;
-        if (doorOpenCount >= 3 && !monsterActive) activateMonster();
-      }
+      if (door.open) { doorOpenCount++; if (doorOpenCount >= 3 && !monsterActive) activateMonster(); }
       return;
     }
     if (cell === 13 && doors[key]) {
-      const door = doors[key];
       if (hasKey) {
-        door.locked = false;
+        doors[key].locked = false;
         map[y][x] = 2;
-        door.open = true;
-        door.progress = 1;
+        doors[key].open = true;
+        doors[key].progress = 1;
         playDoorCreak();
         showMsg('Запертая дверь открыта ключом...');
-      } else {
-        showMsg('Заперто. Нужен ключ.');
-      }
+      } else showMsg('Заперто. Нужен ключ.');
       return;
     }
     if (cell === 3) {
@@ -411,17 +386,12 @@ function doAction() {
     while (diff < -Math.PI) diff += Math.PI * 2;
     while (diff > Math.PI) diff -= Math.PI * 2;
     if (Math.abs(diff) > 0.5) continue;
-    if (s.type === 'lamp') {
-      s.on = !s.on;
-      playTone(s.on ? 800 : 200, 0.1, 'square', 0.06);
-      showMsg(s.on ? 'Лампа включена' : 'Лампа выключена');
-      return;
-    }
-    if (s.type === 'computer') { showMsg('Экран монитора мерцает...'); playTone(300, 0.1, 'square', 0.05); return; }
-    if (s.type === 'bed') { showMsg('Кровать. Кто-то спал здесь...'); return; }
-    if (s.type === 'sofa') { showMsg('Диван. Пахнет пылью.'); return; }
-    if (s.type === 'stove') { showMsg('Плита. Холодная.'); return; }
-    if (s.type === 'fridge') { showMsg('Холодильник. Гудит.'); playTone(120, 0.3, 'sawtooth', 0.05); return; }
+    if (s.type === 'lamp') { s.on = !s.on; playTone(s.on ? 800 : 200, 0.1, 'square', 0.06); showMsg(s.on ? 'Лампа вкл' : 'Лампа выкл'); return; }
+    if (s.type === 'computer') { showMsg('Монитор мерцает...'); playTone(300, 0.1, 'square', 0.05); return; }
+    if (s.type === 'bed') { showMsg('Кровать.'); return; }
+    if (s.type === 'sofa') { showMsg('Диван.'); return; }
+    if (s.type === 'stove') { showMsg('Плита.'); return; }
+    if (s.type === 'fridge') { showMsg('Холодильник гудит.'); playTone(120, 0.3, 'sawtooth', 0.05); return; }
   }
   showMsg('Здесь нечего делать');
 }
@@ -442,7 +412,7 @@ function showNote(title, text) {
 // ===== МОНСТР =====
 function activateMonster() {
   monsterActive = true;
-  monster = { x: 1.5, y: 13.5, speed: 0.012, visible: false };
+  monster = { x: 2.5, y: 14.5, speed: 0.012, visible: false };
   showMsg('...что-то проснулось в доме...');
   playWhisper();
   setTimeout(playWhisper, 800);
@@ -450,19 +420,18 @@ function activateMonster() {
 }
 function updateMonster() {
   if (!monsterActive || !monster) return;
-  const dx = player.x - monster.x;
-  const dy = player.y - monster.y;
+  const dx = player.x - monster.x, dy = player.y - monster.y;
   const dist = Math.hypot(dx, dy);
   if (dist > 0.8) {
-    const nx = monster.x + (dx / dist) * monster.speed;
-    const ny = monster.y + (dy / dist) * monster.speed;
+    const nx = monster.x + (dx/dist)*monster.speed;
+    const ny = monster.y + (dy/dist)*monster.speed;
     if (!isSolid(nx, monster.y)) monster.x = nx;
     if (!isSolid(monster.x, ny)) monster.y = ny;
   } else {
     document.getElementById('flash').style.opacity = 0.9;
     setTimeout(() => document.getElementById('flash').style.opacity = 0, 500);
     playWhisper();
-    monster.x = 1.5; monster.y = 13.5;
+    monster.x = 2.5; monster.y = 14.5;
     showMsg('ОНО ПРИКОСНУЛОСЬ К ТЕБЕ');
   }
   monster.visible = dist < 8;
@@ -511,10 +480,9 @@ function isSolid(x, y) {
 function wallColor(cellType, shade, wallX) {
   const s = shade;
   if (cellType === 2 || cellType === 13) {
-    const panel = Math.abs(wallX - 0.5);
-    const p = panel < 0.15 ? 0.7 : 1;
-    const locked = cellType === 13 ? 0.6 : 1;
-    return `rgb(${Math.floor(120*s*p*locked)},${Math.floor(75*s*p*locked)},${Math.floor(35*s*p*locked)})`;
+    const edge = (wallX < 0.05 || wallX > 0.95) ? 0.6 : 1;
+    const handle = (wallX > 0.85 && wallX < 0.92) ? 1.6 : 1;
+    return `rgb(${Math.floor(120*s*edge*handle)},${Math.floor(75*s*edge*handle)},${Math.floor(35*s*edge*handle)})`;
   }
   if (cellType === 3) {
     const crack = Math.sin(wallX * 60) > 0.7 ? 0.5 : 1;
@@ -529,25 +497,25 @@ function wallColor(cellType, shade, wallX) {
     const door = Math.floor(wallX * 4) % 2 === 0 ? 1 : 0.85;
     return `rgb(${Math.floor(65*s*door)},${Math.floor(40*s*door)},${Math.floor(25*s*door)})`;
   }
-  const stripe = Math.floor(wallX * 8) % 2 === 0 ? 1 : 0.85;
-  return `rgb(${Math.floor(90*s*stripe)},${Math.floor(65*s*stripe)},${Math.floor(50*s*stripe)})`;
+  const stripe = Math.floor(wallX * 8) % 2 === 0 ? 1 : 0.88;
+  return `rgb(${Math.floor(160*s*stripe)},${Math.floor(130*s*stripe)},${Math.floor(100*s*stripe)})`;
 }
 
 // ===== СВЕТ =====
 function getLightAt(x, y) {
-  let light = 0;
+  let light = 0.35;
   for (const s of sprites) {
     if (s.type !== 'lamp' || !s.on) continue;
     const d = Math.hypot(s.x - x, s.y - y);
-    light += (s.power || 0.5) / (1 + d * d * 0.5);
+    light += (s.power || 0.5) / (1 + d * d * 0.4);
   }
-  return Math.min(1.2, light);
+  return Math.min(1.6, light);
 }
 
 // ===== ВИД ИЗ ОКНА =====
 function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
-  const skyTop = [5, 10, 25];
-  const skyBot = [30, 60, 100];
+  const skyTop = [8, 15, 35];
+  const skyBot = [40, 70, 110];
   const t = wallX;
   const r = skyTop[0] + (skyBot[0] - skyTop[0]) * t;
   const g = skyTop[1] + (skyBot[1] - skyTop[1]) * t;
@@ -564,159 +532,199 @@ function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
     ctx.fillStyle = glowGrad;
     ctx.fillRect(screenX, y0, rayW, wallH);
     ctx.fillStyle = `rgba(230,235,255,${0.95*shade})`;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, wallH * 0.05, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(moonX, moonY, wallH*0.05, 0, Math.PI*2); ctx.fill();
   }
 
-  const treePositions = [0.15, 0.85];
-  for (const tp of treePositions) {
+  for (const tp of [0.15, 0.85]) {
     if (wallX > tp - 0.08 && wallX < tp + 0.08) {
       ctx.fillStyle = `rgba(0,3,10,${0.9*shade})`;
       const treeX = screenX - rayW;
       const treeW = rayW * 3;
       const treeTop = y0 + wallH * 0.1;
       const treeBot = y0 + wallH * 0.9;
-      ctx.fillRect(treeX + treeW * 0.4, treeTop + wallH * 0.3, treeW * 0.2, treeBot - treeTop - wallH * 0.3);
+      ctx.fillRect(treeX + treeW*0.4, treeTop + wallH*0.3, treeW*0.2, treeBot - treeTop - wallH*0.3);
       ctx.beginPath();
-      ctx.moveTo(treeX + treeW * 0.5, treeTop);
-      ctx.lineTo(treeX + treeW * 0.1, treeTop + wallH * 0.45);
-      ctx.lineTo(treeX + treeW * 0.9, treeTop + wallH * 0.45);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(treeX + treeW*0.5, treeTop);
+      ctx.lineTo(treeX + treeW*0.1, treeTop + wallH*0.45);
+      ctx.lineTo(treeX + treeW*0.9, treeTop + wallH*0.45);
+      ctx.closePath(); ctx.fill();
     }
   }
 
-  const fogGrad = ctx.createLinearGradient(0, y0 + wallH * 0.5, 0, y0 + wallH);
+  const fogGrad = ctx.createLinearGradient(0, y0 + wallH*0.5, 0, y0 + wallH);
   fogGrad.addColorStop(0, `rgba(80,130,180,0)`);
   fogGrad.addColorStop(1, `rgba(80,130,180,${0.45*shade})`);
   ctx.fillStyle = fogGrad;
-  ctx.fillRect(screenX, y0 + wallH * 0.5, rayW, wallH * 0.5);
+  ctx.fillRect(screenX, y0 + wallH*0.5, rayW, wallH*0.5);
 
   if (wallX > 0.2 && wallX < 0.8) {
     ctx.fillStyle = `rgba(5,10,15,${0.8*shade})`;
-    ctx.fillRect(screenX, y0 + wallH * 0.85, rayW, wallH * 0.15);
+    ctx.fillRect(screenX, y0 + wallH*0.85, rayW, wallH*0.15);
   }
 
-  ctx.fillStyle = `rgba(15,8,4,${0.95*shade})`;
-  ctx.fillRect(screenX, y0, rayW, wallH * 0.05);
-  ctx.fillRect(screenX, y0 + wallH * 0.95, rayW, wallH * 0.05);
+  ctx.fillStyle = `rgba(60,40,25,${0.95*shade})`;
+  ctx.fillRect(screenX, y0, rayW, wallH*0.06);
+  ctx.fillRect(screenX, y0 + wallH*0.94, rayW, wallH*0.06);
   if (Math.abs(wallX - 0.5) < 0.025) ctx.fillRect(screenX, y0, rayW, wallH);
   if (wallX < 0.015 || wallX > 0.985) ctx.fillRect(screenX, y0, rayW, wallH);
 }
 
-// ===== СПРАЙТЫ =====
+// ===== СПРАЙТЫ (МЕБЕЛЬ) =====
 function drawSprite(sprite, zbuffer, horizon) {
   const dx = sprite.x - player.x;
   const dy = sprite.y - player.y;
   const dist = Math.hypot(dx, dy);
+
   let angle = Math.atan2(dy, dx) - player.dir;
   while (angle < -Math.PI) angle += Math.PI * 2;
   while (angle > Math.PI) angle -= Math.PI * 2;
-  if (Math.abs(angle) > player.fov / 2 + 0.2) return;
+  if (Math.abs(angle) > player.fov / 2 + 0.3) return;
+
   const correctedDist = dist * Math.cos(angle);
-  if (correctedDist < 0.15) return;
+  if (correctedDist < 0.2) return;
+
   const screenCenterX = (0.5 + angle / player.fov) * W;
   const scale = H / correctedDist;
-  const sizeH = Math.min(H * 3, scale * sprite.h);
-  const sizeW = Math.min(W * 1.5, scale * sprite.w);
+
+  const maxH = H * 0.85;
+  const sizeH = Math.min(maxH, scale * sprite.h);
+  const sizeW = Math.min(W * 0.9, scale * sprite.w);
+
   const floorY = horizon + (H / correctedDist) * 0.5;
   const y1 = floorY;
   const y0 = y1 - sizeH;
   const x0 = screenCenterX - sizeW / 2;
+
   const centerIdx = Math.max(0, Math.min(zbuffer.length - 1, Math.floor((screenCenterX / W) * zbuffer.length)));
-  if (zbuffer[centerIdx] < correctedDist) return;
-  const shade = Math.max(0.25, 1 - correctedDist / 14);
+  if (zbuffer[centerIdx] < correctedDist - 0.15) return;
+
+  const shade = Math.max(0.35, 1 - correctedDist / 14);
 
   ctx.save();
   ctx.globalAlpha = 1;
 
   if (sprite.type === 'bed') {
-    ctx.fillStyle = `rgb(${Math.floor(40*shade)},${Math.floor(25*shade)},${Math.floor(15*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.02, y0 + sizeH*0.7, sizeW*0.06, sizeH*0.3);
-    ctx.fillRect(x0 + sizeW*0.92, y0 + sizeH*0.7, sizeW*0.06, sizeH*0.3);
-    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(45*shade)},${Math.floor(30*shade)})`;
-    ctx.fillRect(x0, y0 + sizeH*0.35, sizeW, sizeH*0.4);
-    ctx.fillStyle = `rgb(${Math.floor(200*shade)},${Math.floor(190*shade)},${Math.floor(170*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.03, y0 + sizeH*0.3, sizeW*0.94, sizeH*0.15);
-    ctx.fillStyle = `rgb(${Math.floor(240*shade)},${Math.floor(235*shade)},${Math.floor(220*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.18, sizeW*0.3, sizeH*0.15);
-    ctx.fillStyle = `rgb(${Math.floor(100*shade)},${Math.floor(50*shade)},${Math.floor(60*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.35, y0 + sizeH*0.3, sizeW*0.62, sizeH*0.15);
-    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(35*shade)},${Math.floor(20*shade)})`;
-    ctx.fillRect(x0, y0, sizeW, sizeH*0.35);
+    ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(30*shade)},${Math.floor(18*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.75, sizeW*0.07, sizeH*0.25);
+    ctx.fillRect(x0 + sizeW*0.88, y0 + sizeH*0.75, sizeW*0.07, sizeH*0.25);
+    ctx.fillStyle = `rgb(${Math.floor(95*shade)},${Math.floor(55*shade)},${Math.floor(35*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.4, sizeW, sizeH*0.38);
+    ctx.fillStyle = `rgb(${Math.floor(215*shade)},${Math.floor(205*shade)},${Math.floor(185*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.03, y0 + sizeH*0.35, sizeW*0.94, sizeH*0.12);
+    ctx.fillStyle = `rgb(${Math.floor(120*shade)},${Math.floor(60*shade)},${Math.floor(70*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.3, y0 + sizeH*0.35, sizeW*0.67, sizeH*0.12);
+    ctx.fillStyle = `rgb(${Math.floor(245*shade)},${Math.floor(240*shade)},${Math.floor(225*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.25, sizeW*0.28, sizeH*0.12);
+    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)})`;
+    ctx.fillRect(x0, y0, sizeW, sizeH*0.4);
   } else if (sprite.type === 'nightstand') {
-    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(50*shade)},${Math.floor(30*shade)})`;
+    ctx.fillStyle = `rgb(${Math.floor(95*shade)},${Math.floor(60*shade)},${Math.floor(35*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(30*shade)},${Math.floor(20*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.3, sizeW*0.8, sizeH*0.06);
-    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.6, sizeW*0.8, sizeH*0.06);
+    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(35*shade)},${Math.floor(22*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.3, sizeW*0.84, sizeH*0.05);
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.6, sizeW*0.84, sizeH*0.05);
+    ctx.fillStyle = `rgb(${Math.floor(220*shade)},${Math.floor(190*shade)},${Math.floor(100*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.42, y0 + sizeH*0.32, sizeW*0.16, sizeH*0.04);
+    ctx.fillRect(x0 + sizeW*0.42, y0 + sizeH*0.62, sizeW*0.16, sizeH*0.04);
   } else if (sprite.type === 'table') {
-    ctx.fillStyle = `rgb(${Math.floor(90*shade)},${Math.floor(60*shade)},${Math.floor(35*shade)})`;
-    ctx.fillRect(x0, y0 + sizeH*0.25, sizeW, sizeH*0.12);
-    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.37, sizeW*0.08, sizeH*0.63);
-    ctx.fillRect(x0 + sizeW*0.87, y0 + sizeH*0.37, sizeW*0.08, sizeH*0.63);
+    ctx.fillStyle = `rgb(${Math.floor(110*shade)},${Math.floor(75*shade)},${Math.floor(45*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.25, sizeW, sizeH*0.1);
+    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(28*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.35, sizeW*0.07, sizeH*0.65);
+    ctx.fillRect(x0 + sizeW*0.88, y0 + sizeH*0.35, sizeW*0.07, sizeH*0.65);
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.7, sizeW*0.9, sizeH*0.03);
   } else if (sprite.type === 'computer') {
-    ctx.fillStyle = `rgb(${Math.floor(30*shade)},${Math.floor(30*shade)},${Math.floor(35*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.55, y0 + sizeH*0.3, sizeW*0.35, sizeH*0.7);
-    ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(200*shade)},${Math.floor(100*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.62, y0 + sizeH*0.4, sizeW*0.04, sizeH*0.5);
-    ctx.fillStyle = `rgb(${Math.floor(20*shade)},${Math.floor(20*shade)},${Math.floor(25*shade)})`;
-    ctx.fillRect(x0, y0, sizeW*0.55, sizeH*0.7);
+    ctx.fillStyle = `rgb(${Math.floor(35*shade)},${Math.floor(35*shade)},${Math.floor(40*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.6, y0 + sizeH*0.35, sizeW*0.3, sizeH*0.65);
+    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(200*shade)},${Math.floor(100*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.66, y0 + sizeH*0.45, sizeW*0.03, sizeH*0.45);
+    ctx.fillStyle = `rgb(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)})`;
+    ctx.fillRect(x0, y0, sizeW*0.55, sizeH*0.72);
     const glow = Math.sin(gameTime * 3) > 0 ? 1 : 0.7;
-    ctx.fillStyle = `rgb(${Math.floor(40*shade)},${Math.floor(150*glow*shade)},${Math.floor(200*glow*shade)})`;
+    ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(150*glow*shade)},${Math.floor(200*glow*shade)})`;
     ctx.fillRect(x0 + sizeW*0.04, y0 + sizeH*0.05, sizeW*0.47, sizeH*0.55);
+    ctx.fillStyle = `rgba(255,255,255,${0.18*shade})`;
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.08, sizeW*0.12, sizeH*0.5);
+    ctx.fillStyle = `rgb(${Math.floor(30*shade)},${Math.floor(30*shade)},${Math.floor(35*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.72, sizeW*0.15, sizeH*0.06);
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.78, sizeW*0.35, sizeH*0.04);
   } else if (sprite.type === 'chair') {
-    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.45, sizeW*0.8, sizeH*0.12);
-    ctx.fillRect(x0 + sizeW*0.15, y0 + sizeH*0.57, sizeW*0.06, sizeH*0.43);
-    ctx.fillRect(x0 + sizeW*0.79, y0 + sizeH*0.57, sizeW*0.06, sizeH*0.43);
-    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(38*shade)},${Math.floor(20*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.05, sizeW*0.8, sizeH*0.4);
+    ctx.fillStyle = `rgb(${Math.floor(85*shade)},${Math.floor(55*shade)},${Math.floor(35*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.45, sizeW*0.8, sizeH*0.1);
+    ctx.fillStyle = `rgb(${Math.floor(75*shade)},${Math.floor(48*shade)},${Math.floor(28*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.08, sizeW*0.8, sizeH*0.38);
+    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.15, y0 + sizeH*0.55, sizeW*0.06, sizeH*0.45);
+    ctx.fillRect(x0 + sizeW*0.79, y0 + sizeH*0.55, sizeW*0.06, sizeH*0.45);
   } else if (sprite.type === 'sofa') {
+    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(45*shade)},${Math.floor(60*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.4, sizeW, sizeH*0.6);
+    ctx.fillStyle = `rgb(${Math.floor(95*shade)},${Math.floor(55*shade)},${Math.floor(70*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.15, sizeW, sizeH*0.3);
     ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(40*shade)},${Math.floor(55*shade)})`;
-    ctx.fillRect(x0, y0 + sizeH*0.35, sizeW, sizeH*0.65);
-    ctx.fillStyle = `rgb(${Math.floor(85*shade)},${Math.floor(50*shade)},${Math.floor(65*shade)})`;
-    ctx.fillRect(x0, y0 + sizeH*0.1, sizeW, sizeH*0.3);
-    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(35*shade)},${Math.floor(50*shade)})`;
-    ctx.fillRect(x0, y0 + sizeH*0.15, sizeW*0.12, sizeH*0.85);
-    ctx.fillRect(x0 + sizeW*0.88, y0 + sizeH*0.15, sizeW*0.12, sizeH*0.85);
+    ctx.fillRect(x0, y0 + sizeH*0.2, sizeW*0.1, sizeH*0.8);
+    ctx.fillRect(x0 + sizeW*0.9, y0 + sizeH*0.2, sizeW*0.1, sizeH*0.8);
+    ctx.fillStyle = `rgb(${Math.floor(130*shade)},${Math.floor(80*shade)},${Math.floor(95*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.18, y0 + sizeH*0.42, sizeW*0.28, sizeH*0.15);
+    ctx.fillRect(x0 + sizeW*0.54, y0 + sizeH*0.42, sizeW*0.28, sizeH*0.15);
   } else if (sprite.type === 'shelf') {
-    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)})`;
+    ctx.fillStyle = `rgb(${Math.floor(85*shade)},${Math.floor(55*shade)},${Math.floor(32*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgba(0,0,0,${0.5*shade})`;
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.3, sizeW*0.84, sizeH*0.04);
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.65, sizeW*0.84, sizeH*0.04);
     const bookColors = [[180,50,50],[50,120,180],[200,180,60],[80,180,90]];
     for (let i = 0; i < 4; i++) {
       const c = bookColors[i];
       ctx.fillStyle = `rgb(${Math.floor(c[0]*shade)},${Math.floor(c[1]*shade)},${Math.floor(c[2]*shade)})`;
-      ctx.fillRect(x0 + sizeW*(0.12 + i*0.2), y0 + sizeH*0.38, sizeW*0.15, sizeH*0.25);
+      ctx.fillRect(x0 + sizeW*(0.12 + i*0.2), y0 + sizeH*0.38, sizeW*0.13, sizeH*0.24);
     }
-  } else if (sprite.type === 'stove') {
-    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(80*shade)},${Math.floor(85*shade)})`;
+ }
+   } else if (sprite.type === 'stove') {
+    ctx.fillStyle = `rgb(${Math.floor(90*shade)},${Math.floor(90*shade)},${Math.floor(95*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgb(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.05, sizeW*0.9, sizeH*0.15);
+    ctx.fillStyle = `rgba(180,40,25,${0.8*shade})`;
+    ctx.beginPath();
+    ctx.arc(x0 + sizeW*0.25, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
+    ctx.arc(x0 + sizeW*0.55, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
+    ctx.fill();
     ctx.fillStyle = `rgba(0,0,0,${0.5*shade})`;
     ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.35, sizeW*0.8, sizeH*0.55);
+    ctx.fillStyle = `rgba(160,160,160,${0.6*shade})`;
+    ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.45, sizeW*0.6, sizeH*0.35);
   } else if (sprite.type === 'fridge') {
-    ctx.fillStyle = `rgb(${Math.floor(200*shade)},${Math.floor(200*shade)},${Math.floor(205*shade)})`;
+    ctx.fillStyle = `rgb(${Math.floor(210*shade)},${Math.floor(210*shade)},${Math.floor(215*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgba(0,0,0,${0.4*shade})`;
+    ctx.fillStyle = `rgba(0,0,0,${0.35*shade})`;
     ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.35, sizeW*0.9, sizeH*0.02);
+    ctx.fillStyle = `rgb(${Math.floor(110*shade)},${Math.floor(110*shade)},${Math.floor(120*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.15, sizeW*0.05, sizeH*0.15);
+    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.5, sizeW*0.05, sizeH*0.3);
   } else if (sprite.type === 'lamp') {
-    const lampShade = sprite.on ? 1 : 0.25;
+    const lampShade = sprite.on ? 1 : 0.3;
     if (sprite.on) {
-      const glow = ctx.createRadialGradient(x0 + sizeW*0.5, y0 + sizeH*0.5, 0, x0 + sizeW*0.5, y0 + sizeH*0.5, sizeW*1.5);
+      const glow = ctx.createRadialGradient(x0 + sizeW*0.5, y0 + sizeH*0.5, 0, x0 + sizeW*0.5, y0 + sizeH*0.5, sizeW*1.8);
       glow.addColorStop(0, `rgba(255,220,120,${0.4*shade})`);
       glow.addColorStop(1, `rgba(255,220,120,0)`);
       ctx.fillStyle = glow;
       ctx.fillRect(x0 - sizeW, y0 - sizeH, sizeW*3, sizeH*3);
     }
-    ctx.fillStyle = `rgb(${Math.floor(255*lampShade*shade)},${Math.floor(220*lampShade*shade)},${Math.floor(120*lampShade*shade)})`;
+    ctx.fillStyle = `rgb(${Math.floor(90*shade)},${Math.floor(75*shade)},${Math.floor(55*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.3, y0 + sizeH*0.8, sizeW*0.4, sizeH*0.2);
+    ctx.fillRect(x0 + sizeW*0.48, y0 + sizeH*0.5, sizeW*0.04, sizeH*0.3);
+    ctx.fillStyle = `rgb(${Math.floor(255*lampShade*shade)},${Math.floor(220*lampShade*shade)},${Math.floor(130*lampShade*shade)})`;
     ctx.beginPath();
     ctx.moveTo(x0 + sizeW*0.3, y0 + sizeH*0.5);
     ctx.lineTo(x0 + sizeW*0.7, y0 + sizeH*0.5);
     ctx.lineTo(x0 + sizeW*0.6, y0 + sizeH*0.15);
     ctx.lineTo(x0 + sizeW*0.4, y0 + sizeH*0.15);
     ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = `rgba(255,255,200,${lampShade*0.9*shade})`;
+    ctx.beginPath();
+    ctx.arc(x0 + sizeW*0.5, y0 + sizeH*0.55, sizeW*0.08, 0, Math.PI*2);
     ctx.fill();
   }
 
@@ -748,8 +756,10 @@ function castRays() {
         if (cell === 2 || cell === 13) {
           const key = `${mx},${my}`;
           const door = doors[key];
-          if (door && door.progress > 0.5) { dist += stepSize; continue; }
-          doorProgress = door ? door.progress : 0;
+          if (door) {
+            doorProgress = door.progress;
+            if (door.progress > 0.75) { dist += stepSize; continue; }
+          }
         }
         hit = true;
         cellType = cell;
@@ -765,19 +775,28 @@ function castRays() {
     const wallH = Math.min(H * 4, (H / correctedDist) * 0.9);
     const y0 = horizon - wallH / 2;
 
-    let shade = Math.max(0.15, 1 - correctedDist / 12);
-    if (side === 1) shade *= 0.75;
+    let shade = Math.max(0.25, 1 - correctedDist / 14);
+    if (side === 1) shade *= 0.82;
     const hitX = player.x + cos * dist;
     const hitY = player.y + sin * dist;
-    shade = Math.min(1.5, shade + getLightAt(hitX, hitY));
+    shade = Math.min(1.6, shade + getLightAt(hitX, hitY));
 
     if (cellType === 5) {
       drawWindowView(screenX, y0, wallH, rayW, wallX, shade);
     } else if (cellType === 2 || cellType === 13) {
+      const dp = doorProgress;
+      const shift = dp * 0.6;
+      const doorW = rayW;
       ctx.fillStyle = wallColor(cellType, shade, wallX);
-      ctx.fillRect(screenX, y0, rayW, wallH);
-      ctx.strokeStyle = `rgba(0,0,0,${0.5*shade})`;
-      ctx.strokeRect(screenX, y0, rayW, wallH);
+      ctx.fillRect(screenX + (wallX > 0.5 ? shift * rayW * 3 : -shift * rayW * 3), y0, doorW, wallH);
+      if (Math.abs(wallX - 0.87) < 0.04 && dp < 0.5) {
+        ctx.fillStyle = `rgb(${Math.floor(220*shade)},${Math.floor(190*shade)},${Math.floor(100*shade)})`;
+        ctx.fillRect(screenX, y0 + wallH * 0.48, doorW, wallH * 0.06);
+      }
+      if (dp > 0.1 && dp < 0.75) {
+        ctx.fillStyle = `rgba(0,0,0,${dp * 0.6})`;
+        ctx.fillRect(screenX, y0, rayW, wallH);
+      }
     } else {
       ctx.fillStyle = wallColor(cellType, shade, wallX);
       ctx.fillRect(screenX, y0, rayW, wallH);
@@ -796,8 +815,7 @@ function castRays() {
 // ===== МОНСТР =====
 function drawMonster(zbuffer, horizon) {
   if (!monsterActive || !monster || !monster.visible) return;
-  const dx = monster.x - player.x;
-  const dy = monster.y - player.y;
+  const dx = monster.x - player.x, dy = monster.y - player.y;
   const dist = Math.hypot(dx, dy);
   let angle = Math.atan2(dy, dx) - player.dir;
   while (angle < -Math.PI) angle += Math.PI * 2;
@@ -805,19 +823,19 @@ function drawMonster(zbuffer, horizon) {
   if (Math.abs(angle) > player.fov / 2 + 0.2) return;
   const screenX = (0.5 + angle / player.fov) * W;
   const correctedDist = dist * Math.cos(angle);
-  const size = Math.min(H * 2, (H / correctedDist) * 0.8);
+  const size = Math.min(H * 1.2, (H / correctedDist) * 0.7);
   const y0 = horizon - size / 2;
   const rayIndex = Math.floor((screenX / W) * zbuffer.length);
   if (rayIndex >= 0 && rayIndex < zbuffer.length && zbuffer[rayIndex] < correctedDist) return;
   const alpha = Math.max(0.3, 1 - correctedDist / 10);
   ctx.fillStyle = `rgba(10,0,0,${alpha})`;
   ctx.beginPath();
-  ctx.ellipse(screenX, y0 + size * 0.5, size * 0.25, size * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(screenX, y0 + size*0.5, size*0.25, size*0.5, 0, 0, Math.PI*2);
   ctx.fill();
   ctx.fillStyle = `rgba(255,0,0,${alpha})`;
   ctx.beginPath();
-  ctx.arc(screenX - size * 0.08, y0 + size * 0.35, size * 0.03, 0, Math.PI * 2);
-  ctx.arc(screenX + size * 0.08, y0 + size * 0.35, size * 0.03, 0, Math.PI * 2);
+  ctx.arc(screenX - size*0.08, y0 + size*0.35, size*0.03, 0, Math.PI*2);
+  ctx.arc(screenX + size*0.08, y0 + size*0.35, size*0.03, 0, Math.PI*2);
   ctx.fill();
 }
 
@@ -838,8 +856,8 @@ function update(dt) {
 
   const moving = Math.abs(mx) > 0.1 || Math.abs(my) > 0.1;
   const sin = Math.sin(player.dir), cos = Math.cos(player.dir);
-  const nx = player.x + (cos * my - sin * mx) * player.speed;
-  const ny = player.y + (sin * my + cos * mx) * player.speed;
+  const nx = player.x + (cos*my - sin*mx) * player.speed;
+  const ny = player.y + (sin*my + cos*mx) * player.speed;
   if (!isSolid(nx, player.y)) player.x = nx;
   if (!isSolid(player.x, ny)) player.y = ny;
 
@@ -852,7 +870,7 @@ function update(dt) {
   let hint = '';
   const fcos = Math.cos(player.dir), fsin = Math.sin(player.dir);
   for (let d = 0.5; d < 1.6; d += 0.2) {
-    const x = Math.floor(player.x + fcos * d), y = Math.floor(player.y + fsin * d);
+    const x = Math.floor(player.x + fcos*d), y = Math.floor(player.y + fsin*d);
     if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) continue;
     const cell = map[y][x];
     const key = `${x},${y}`;
@@ -875,15 +893,16 @@ function loop(now) {
   update(dt);
 
   const horizon = H / 2 + player.pitch;
+
   const ceilGrad = ctx.createLinearGradient(0, 0, 0, Math.max(1, horizon));
-  ceilGrad.addColorStop(0, '#050505');
-  ceilGrad.addColorStop(1, '#12100e');
+  ceilGrad.addColorStop(0, '#3a3028');
+  ceilGrad.addColorStop(1, '#5a4a3a');
   ctx.fillStyle = ceilGrad;
   ctx.fillRect(0, 0, W, Math.max(0, horizon));
 
   const floorGrad = ctx.createLinearGradient(0, Math.max(0, horizon), 0, H);
-  floorGrad.addColorStop(0, '#15100a');
-  floorGrad.addColorStop(1, '#050302');
+  floorGrad.addColorStop(0, '#4a3525');
+  floorGrad.addColorStop(1, '#2a1a10');
   ctx.fillStyle = floorGrad;
   ctx.fillRect(0, Math.max(0, horizon), W, H - Math.max(0, horizon));
 
@@ -901,7 +920,7 @@ function loop(now) {
   if (player.flashlight && player.battery > 0) {
     const grad = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.7);
     grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.7)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.55)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
   }
@@ -918,4 +937,4 @@ function loop(now) {
 requestAnimationFrame(loop);
 </script>
 </body>
-               </html>
+</html>
