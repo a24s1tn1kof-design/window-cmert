@@ -4,155 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Окно смерти</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
   canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
 
-  #ui {
-    position: fixed; inset: 0; pointer-events: none;
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: 15px; color: #8a0000; text-shadow: 0 0 10px #ff0000;
-    padding-top: env(safe-area-inset-top, 15px); z-index: 5;
-  }
+  #ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; color: #8a0000; text-shadow: 0 0 10px #ff0000; z-index: 5; }
   #title { font-size: 12px; letter-spacing: 4px; opacity: 0.6; }
   #hint { font-size: 10px; opacity: 0.5; text-align: center; }
 
-  #moveZone {
-    position: fixed; left: 0; top: 0; width: 50%; height: 100%;
-    pointer-events: auto; z-index: 10; touch-action: none;
-  }
-  #lookZone {
-    position: fixed; right: 0; top: 0; width: 50%; height: 100%;
-    pointer-events: auto; z-index: 10; touch-action: none;
-  }
+  #moveZone { position: fixed; left: 0; top: 0; width: 50%; height: 100%; pointer-events: auto; z-index: 10; touch-action: none; }
+  #lookZone { position: fixed; right: 0; top: 0; width: 50%; height: 100%; pointer-events: auto; z-index: 10; touch-action: none; }
 
-  #joy {
-    position: fixed; width: 140px; height: 140px;
-    border-radius: 50%; border: 2px solid rgba(255,0,0,0.3);
-    pointer-events: none; opacity: 0; transition: opacity 0.15s;
-    transform: translate(-50%, -50%); z-index: 11;
-  }
+  #joy { position: fixed; width: 140px; height: 140px; border-radius: 50%; border: 2px solid rgba(255,0,0,0.3); pointer-events: none; opacity: 0; transition: opacity 0.15s; transform: translate(-50%, -50%); z-index: 11; }
   #joy.active { opacity: 1; }
-  #joyStick {
-    position: absolute; width: 55px; height: 55px; border-radius: 50%;
-    background: rgba(255,0,0,0.4); top: 42px; left: 42px;
-    box-shadow: 0 0 20px rgba(255,0,0,0.6);
-  }
+  #joyStick { position: absolute; width: 55px; height: 55px; border-radius: 50%; background: rgba(255,0,0,0.4); top: 42px; left: 42px; box-shadow: 0 0 20px rgba(255,0,0,0.6); }
 
-  #btnStack {
-    position: fixed; right: 20px; bottom: 20px;
-    display: flex; flex-direction: column; gap: 12px;
-    align-items: center; z-index: 20;
-  }
-
-  #actionBtn {
-    width: 75px; height: 75px; border-radius: 50%;
-    background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4);
-    color: #ff3333; font-size: 11px; letter-spacing: 2px;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: auto; touch-action: none; opacity: 0.8;
-    text-shadow: 0 0 8px #ff0000;
-  }
+  #btnStack { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; z-index: 20; }
+  #actionBtn { width: 75px; height: 75px; border-radius: 50%; background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4); color: #ff3333; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.8; text-shadow: 0 0 8px #ff0000; }
   #actionBtn:active { background: rgba(255,0,0,0.5); opacity: 1; }
-
-  #lightBtn {
-    width: 60px; height: 60px; border-radius: 50%;
-    background: rgba(255,200,0,0.15); border: 2px solid rgba(255,200,0,0.4);
-    color: #ffcc33; font-size: 22px;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: auto; touch-action: none; opacity: 0.7;
-  }
+  #lightBtn { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,200,0,0.15); border: 2px solid rgba(255,200,0,0.4); color: #ffcc33; font-size: 22px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.7; }
   #lightBtn:active { background: rgba(255,200,0,0.5); opacity: 1; }
   #lightBtn.on { background: rgba(255,200,0,0.5); }
 
-  #fsBtn {
-    position: fixed; right: 20px; top: 20px;
-    width: 44px; height: 44px; border-radius: 8px;
-    background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.4);
-    color: #ff3333; font-size: 20px;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: auto; touch-action: none; opacity: 0.6;
-    z-index: 20;
-  }
+  #fsBtn { position: fixed; right: 20px; top: 20px; width: 44px; height: 44px; border-radius: 8px; background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.4); color: #ff3333; font-size: 20px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.6; z-index: 20; }
   #fsBtn:active { opacity: 1; }
 
-  #crosshair {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    width: 6px; height: 6px; border-radius: 50%;
-    background: rgba(255,50,50,0.6); pointer-events: none;
-    box-shadow: 0 0 8px #ff0000; z-index: 5;
-  }
+  #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border-radius: 50%; background: rgba(255,50,50,0.6); pointer-events: none; box-shadow: 0 0 8px #ff0000; z-index: 5; }
+  #vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle, transparent 35%, rgba(0,0,0,0.95) 100%); z-index: 6; }
+  #flash { position: fixed; inset: 0; pointer-events: none; background: #ff0000; opacity: 0; transition: opacity 0.15s; z-index: 7; }
 
-  #vignette {
-    position: fixed; inset: 0; pointer-events: none;
-    background: radial-gradient(circle, transparent 35%, rgba(0,0,0,0.95) 100%);
-    z-index: 6;
-  }
-  #flash {
-    position: fixed; inset: 0; pointer-events: none;
-    background: #ff0000; opacity: 0; transition: opacity 0.15s;
-    z-index: 7;
-  }
-
-  #msg {
-    position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
-    color: #ff4444; font-size: 16px; letter-spacing: 2px;
-    text-shadow: 0 0 12px #ff0000; opacity: 0; transition: opacity 0.3s;
-    pointer-events: none; z-index: 30; text-align: center; padding: 0 20px;
-  }
-
-  #note {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    background: rgba(20,10,5,0.95); border: 2px solid #8a0000;
-    color: #d4a373; font-size: 14px; line-height: 1.6; letter-spacing: 1px;
-    padding: 25px 30px; max-width: 90%; width: 340px;
-    text-shadow: 0 0 8px rgba(255,0,0,0.3); opacity: 0;
-    transition: opacity 0.3s; pointer-events: none; z-index: 40;
-    font-family: 'Courier New', monospace;
-  }
+  #msg { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); color: #ff4444; font-size: 16px; letter-spacing: 2px; text-shadow: 0 0 12px #ff0000; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 30; text-align: center; padding: 0 20px; }
+  #note { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(20,10,5,0.95); border: 2px solid #8a0000; color: #d4a373; font-size: 14px; line-height: 1.6; letter-spacing: 1px; padding: 25px 30px; max-width: 90%; width: 340px; text-shadow: 0 0 8px rgba(255,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 40; }
   #note.show { opacity: 1; }
   #note h3 { color: #ff3333; margin-bottom: 12px; font-size: 16px; letter-spacing: 3px; }
 
-  #interact {
-    position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
-    color: #ff8888; font-size: 13px; letter-spacing: 2px;
-    text-shadow: 0 0 10px #ff0000; opacity: 0; transition: opacity 0.2s;
-    pointer-events: none; z-index: 30; text-align: center;
-  }
+  #interact { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); color: #ff8888; font-size: 13px; letter-spacing: 2px; text-shadow: 0 0 10px #ff0000; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 30; text-align: center; }
+  #inventory { position: fixed; top: 20px; left: 20px; color: #ffcc33; font-size: 14px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,200,0,0.6); pointer-events: none; z-index: 30; }
 
-  #inventory {
-    position: fixed; top: 20px; left: 20px;
-    color: #ffcc33; font-size: 14px; letter-spacing: 2px;
-    text-shadow: 0 0 10px rgba(255,200,0,0.6);
-    pointer-events: none; z-index: 30;
-  }
-
-  #rotateOverlay {
-    position: fixed; inset: 0; background: #000; z-index: 9999;
-    display: none; flex-direction: column;
-    align-items: center; justify-content: center;
-    color: #ff3333; font-size: 16px; letter-spacing: 3px;
-    text-shadow: 0 0 15px #ff0000; text-align: center;
-    padding: 30px;
-  }
-  #rotateOverlay .icon {
-    font-size: 70px; margin-bottom: 25px;
-    animation: rotateHint 2s infinite ease-in-out;
-  }
-  @keyframes rotateHint {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(90deg); }
-  }
+  #rotateOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; color: #ff3333; font-size: 16px; letter-spacing: 3px; text-shadow: 0 0 15px #ff0000; text-align: center; padding: 30px; }
+  #rotateOverlay .icon { font-size: 70px; margin-bottom: 25px; animation: rotateHint 2s infinite ease-in-out; }
+  @keyframes rotateHint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
   @media (orientation: portrait) {
     #rotateOverlay { display: flex; }
-    #game, #ui, #moveZone, #lookZone, #joy, #btnStack, #fsBtn,
-    #crosshair, #vignette, #flash, #msg, #note, #interact, #inventory {
-      display: none !important;
-    }
+    #game, #ui, #moveZone, #lookZone, #joy, #btnStack, #fsBtn, #crosshair, #vignette, #flash, #msg, #note, #interact, #inventory { display: none !important; }
   }
 </style>
 </head>
@@ -166,7 +62,6 @@
 
 <div id="moveZone"></div>
 <div id="lookZone"></div>
-
 <div id="crosshair"></div>
 <div id="vignette"></div>
 <div id="flash"></div>
@@ -174,7 +69,6 @@
 <div id="note"></div>
 <div id="interact"></div>
 <div id="inventory"></div>
-
 <div id="joy"><div id="joyStick"></div></div>
 
 <div id="btnStack">
@@ -285,7 +179,8 @@ const player = {
   flashlight: false,
   battery: 1.0
 };
- // ===== ЗВУК =====
+
+// ===== ЗВУК =====
 let audioCtx = null;
 function initAudio() {
   if (audioCtx) return;
@@ -307,9 +202,7 @@ function playTone(freq, dur, type = 'sine', vol = 0.1) {
   osc.start();
   osc.stop(audioCtx.currentTime + dur);
 }
-
 function playFootstep() { playTone(80 + Math.random() * 40, 0.08, 'sine', 0.05); }
-
 function playDoorCreak() {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
@@ -324,7 +217,6 @@ function playDoorCreak() {
   osc.start();
   osc.stop(audioCtx.currentTime + 0.6);
 }
-
 function playWhisper() {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
@@ -446,7 +338,6 @@ moveZone.addEventListener('touchend', e => {
 // ===== ФОНАРИК =====
 document.getElementById('lightBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFlashlight(); }, { passive: false });
 document.getElementById('lightBtn').addEventListener('click', toggleFlashlight);
-
 function toggleFlashlight() {
   player.flashlight = !player.flashlight;
   document.getElementById('lightBtn').classList.toggle('on', player.flashlight);
@@ -464,7 +355,6 @@ function doAction() {
     if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) continue;
     const cell = map[y][x];
     const key = `${x},${y}`;
-
     if (cell === 2 && doors[key]) {
       const door = doors[key];
       door.open = !door.open;
@@ -512,7 +402,6 @@ function doAction() {
       return;
     }
   }
-
   for (const s of sprites) {
     const dx = s.x - player.x, dy = s.y - player.y;
     const dist = Math.hypot(dx, dy);
@@ -522,7 +411,6 @@ function doAction() {
     while (diff < -Math.PI) diff += Math.PI * 2;
     while (diff > Math.PI) diff -= Math.PI * 2;
     if (Math.abs(diff) > 0.5) continue;
-
     if (s.type === 'lamp') {
       s.on = !s.on;
       playTone(s.on ? 800 : 200, 0.1, 'square', 0.06);
@@ -535,7 +423,6 @@ function doAction() {
     if (s.type === 'stove') { showMsg('Плита. Холодная.'); return; }
     if (s.type === 'fridge') { showMsg('Холодильник. Гудит.'); playTone(120, 0.3, 'sawtooth', 0.05); return; }
   }
-
   showMsg('Здесь нечего делать');
 }
 
@@ -546,7 +433,6 @@ function showMsg(text) {
   clearTimeout(el._t);
   el._t = setTimeout(() => el.style.opacity = 0, 2000);
 }
-
 function showNote(title, text) {
   noteEl.innerHTML = `<h3>${title}</h3>${text}`;
   noteEl.classList.add('show');
@@ -562,7 +448,6 @@ function activateMonster() {
   setTimeout(playWhisper, 800);
   setTimeout(playWhisper, 1600);
 }
-
 function updateMonster() {
   if (!monsterActive || !monster) return;
   const dx = player.x - monster.x;
@@ -581,11 +466,11 @@ function updateMonster() {
     showMsg('ОНО ПРИКОСНУЛОСЬ К ТЕБЕ');
   }
   monster.visible = dist < 8;
- }
- // ===== ПОЛНОЭКРАННЫЙ =====
+}
+
+// ===== ПОЛНОЭКРАННЫЙ =====
 document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
 document.getElementById('fsBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFullscreen(); }, { passive: false });
-
 function toggleFullscreen() {
   const el = document.documentElement;
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -608,7 +493,6 @@ function updateDoors() {
     if (Math.abs(d.progress - target) < 0.01) d.progress = target;
   }
 }
-
 function isSolid(x, y) {
   const mx = Math.floor(x), my = Math.floor(y);
   if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) return true;
@@ -640,9 +524,7 @@ function wallColor(cellType, shade, wallX) {
     const plank = Math.floor(wallX * 10) % 2 === 0 ? 1 : 0.8;
     return `rgb(${Math.floor(85*s*plank)},${Math.floor(55*s*plank)},${Math.floor(35*s*plank)})`;
   }
-  if (cellType === 5) {
-    return `rgb(${Math.floor(10*s)},${Math.floor(15*s)},${Math.floor(30*s)})`;
-  }
+  if (cellType === 5) return `rgb(${Math.floor(10*s)},${Math.floor(15*s)},${Math.floor(30*s)})`;
   if (cellType === 9) {
     const door = Math.floor(wallX * 4) % 2 === 0 ? 1 : 0.85;
     return `rgb(${Math.floor(65*s*door)},${Math.floor(40*s*door)},${Math.floor(25*s*door)})`;
@@ -670,7 +552,6 @@ function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
   const r = skyTop[0] + (skyBot[0] - skyTop[0]) * t;
   const g = skyTop[1] + (skyBot[1] - skyTop[1]) * t;
   const b = skyTop[2] + (skyBot[2] - skyTop[2]) * t;
-
   ctx.fillStyle = `rgb(${Math.floor(r*shade)},${Math.floor(g*shade)},${Math.floor(b*shade)})`;
   ctx.fillRect(screenX, y0, rayW, wallH);
 
@@ -703,12 +584,6 @@ function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
       ctx.lineTo(treeX + treeW * 0.9, treeTop + wallH * 0.45);
       ctx.closePath();
       ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(treeX + treeW * 0.5, treeTop + wallH * 0.2);
-      ctx.lineTo(treeX + treeW * 0.05, treeTop + wallH * 0.65);
-      ctx.lineTo(treeX + treeW * 0.95, treeTop + wallH * 0.65);
-      ctx.closePath();
-      ctx.fill();
     }
   }
 
@@ -735,31 +610,22 @@ function drawSprite(sprite, zbuffer, horizon) {
   const dx = sprite.x - player.x;
   const dy = sprite.y - player.y;
   const dist = Math.hypot(dx, dy);
-
   let angle = Math.atan2(dy, dx) - player.dir;
   while (angle < -Math.PI) angle += Math.PI * 2;
   while (angle > Math.PI) angle -= Math.PI * 2;
-
   if (Math.abs(angle) > player.fov / 2 + 0.2) return;
-
   const correctedDist = dist * Math.cos(angle);
   if (correctedDist < 0.15) return;
-
   const screenCenterX = (0.5 + angle / player.fov) * W;
   const scale = H / correctedDist;
   const sizeH = Math.min(H * 3, scale * sprite.h);
   const sizeW = Math.min(W * 1.5, scale * sprite.w);
-
   const floorY = horizon + (H / correctedDist) * 0.5;
   const y1 = floorY;
   const y0 = y1 - sizeH;
-
   const x0 = screenCenterX - sizeW / 2;
-  const x1 = screenCenterX + sizeW / 2;
-
   const centerIdx = Math.max(0, Math.min(zbuffer.length - 1, Math.floor((screenCenterX / W) * zbuffer.length)));
   if (zbuffer[centerIdx] < correctedDist) return;
-
   const shade = Math.max(0.25, 1 - correctedDist / 14);
 
   ctx.save();
@@ -785,9 +651,6 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(30*shade)},${Math.floor(20*shade)})`;
     ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.3, sizeW*0.8, sizeH*0.06);
     ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.6, sizeW*0.8, sizeH*0.06);
-    ctx.fillStyle = `rgb(${Math.floor(200*shade)},${Math.floor(180*shade)},${Math.floor(100*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.45, y0 + sizeH*0.32, sizeW*0.1, sizeH*0.04);
-    ctx.fillRect(x0 + sizeW*0.45, y0 + sizeH*0.62, sizeW*0.1, sizeH*0.04);
   } else if (sprite.type === 'table') {
     ctx.fillStyle = `rgb(${Math.floor(90*shade)},${Math.floor(60*shade)},${Math.floor(35*shade)})`;
     ctx.fillRect(x0, y0 + sizeH*0.25, sizeW, sizeH*0.12);
@@ -804,11 +667,6 @@ function drawSprite(sprite, zbuffer, horizon) {
     const glow = Math.sin(gameTime * 3) > 0 ? 1 : 0.7;
     ctx.fillStyle = `rgb(${Math.floor(40*shade)},${Math.floor(150*glow*shade)},${Math.floor(200*glow*shade)})`;
     ctx.fillRect(x0 + sizeW*0.04, y0 + sizeH*0.05, sizeW*0.47, sizeH*0.55);
-    ctx.fillStyle = `rgba(255,255,255,${0.15*shade})`;
-    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.08, sizeW*0.15, sizeH*0.5);
-    ctx.fillStyle = `rgb(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.18, y0 + sizeH*0.7, sizeW*0.18, sizeH*0.08);
-    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.78, sizeW*0.4, sizeH*0.04);
   } else if (sprite.type === 'chair') {
     ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)})`;
     ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.45, sizeW*0.8, sizeH*0.12);
@@ -824,61 +682,34 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(35*shade)},${Math.floor(50*shade)})`;
     ctx.fillRect(x0, y0 + sizeH*0.15, sizeW*0.12, sizeH*0.85);
     ctx.fillRect(x0 + sizeW*0.88, y0 + sizeH*0.15, sizeW*0.12, sizeH*0.85);
-    ctx.fillStyle = `rgb(${Math.floor(110*shade)},${Math.floor(70*shade)},${Math.floor(80*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.4, sizeW*0.25, sizeH*0.15);
-    ctx.fillRect(x0 + sizeW*0.55, y0 + sizeH*0.4, sizeW*0.25, sizeH*0.15);
   } else if (sprite.type === 'shelf') {
     ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgba(0,0,0,${0.6*shade})`;
-    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.3, sizeW*0.84, sizeH*0.06);
-    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.65, sizeW*0.84, sizeH*0.06);
     const bookColors = [[180,50,50],[50,120,180],[200,180,60],[80,180,90]];
     for (let i = 0; i < 4; i++) {
       const c = bookColors[i];
       ctx.fillStyle = `rgb(${Math.floor(c[0]*shade)},${Math.floor(c[1]*shade)},${Math.floor(c[2]*shade)})`;
       ctx.fillRect(x0 + sizeW*(0.12 + i*0.2), y0 + sizeH*0.38, sizeW*0.15, sizeH*0.25);
-      ctx.fillRect(x0 + sizeW*(0.12 + i*0.2), y0 + sizeH*0.73, sizeW*0.15, sizeH*0.25);
     }
- }
-   } else if (sprite.type === 'stove') {
+  } else if (sprite.type === 'stove') {
     ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(80*shade)},${Math.floor(85*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgb(${Math.floor(20*shade)},${Math.floor(20*shade)},${Math.floor(25*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.05, sizeW*0.9, sizeH*0.15);
-    ctx.fillStyle = `rgba(150,30,20,${0.7*shade})`;
-    ctx.beginPath();
-    ctx.arc(x0 + sizeW*0.25, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
-    ctx.arc(x0 + sizeW*0.55, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
-    ctx.arc(x0 + sizeW*0.4, y0 + sizeH*0.05, sizeW*0.06, 0, Math.PI*2);
-    ctx.fill();
     ctx.fillStyle = `rgba(0,0,0,${0.5*shade})`;
     ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.35, sizeW*0.8, sizeH*0.55);
-    ctx.fillStyle = `rgba(150,150,150,${0.6*shade})`;
-    ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.45, sizeW*0.6, sizeH*0.35);
   } else if (sprite.type === 'fridge') {
     ctx.fillStyle = `rgb(${Math.floor(200*shade)},${Math.floor(200*shade)},${Math.floor(205*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
     ctx.fillStyle = `rgba(0,0,0,${0.4*shade})`;
     ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.35, sizeW*0.9, sizeH*0.02);
-    ctx.fillStyle = `rgb(${Math.floor(100*shade)},${Math.floor(100*shade)},${Math.floor(110*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.15, sizeW*0.06, sizeH*0.15);
-    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.5, sizeW*0.06, sizeH*0.3);
   } else if (sprite.type === 'lamp') {
     const lampShade = sprite.on ? 1 : 0.25;
     if (sprite.on) {
-      const glow = ctx.createRadialGradient(
-        x0 + sizeW*0.5, y0 + sizeH*0.5, 0,
-        x0 + sizeW*0.5, y0 + sizeH*0.5, sizeW*1.5
-      );
+      const glow = ctx.createRadialGradient(x0 + sizeW*0.5, y0 + sizeH*0.5, 0, x0 + sizeW*0.5, y0 + sizeH*0.5, sizeW*1.5);
       glow.addColorStop(0, `rgba(255,220,120,${0.4*shade})`);
       glow.addColorStop(1, `rgba(255,220,120,0)`);
       ctx.fillStyle = glow;
       ctx.fillRect(x0 - sizeW, y0 - sizeH, sizeW*3, sizeH*3);
     }
-    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(70*shade)},${Math.floor(50*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.3, y0 + sizeH*0.8, sizeW*0.4, sizeH*0.2);
-    ctx.fillRect(x0 + sizeW*0.48, y0 + sizeH*0.5, sizeW*0.04, sizeH*0.3);
     ctx.fillStyle = `rgb(${Math.floor(255*lampShade*shade)},${Math.floor(220*lampShade*shade)},${Math.floor(120*lampShade*shade)})`;
     ctx.beginPath();
     ctx.moveTo(x0 + sizeW*0.3, y0 + sizeH*0.5);
@@ -886,10 +717,6 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.lineTo(x0 + sizeW*0.6, y0 + sizeH*0.15);
     ctx.lineTo(x0 + sizeW*0.4, y0 + sizeH*0.15);
     ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = `rgba(255,255,200,${lampShade*0.9*shade})`;
-    ctx.beginPath();
-    ctx.arc(x0 + sizeW*0.5, y0 + sizeH*0.55, sizeW*0.08, 0, Math.PI*2);
     ctx.fill();
   }
 
@@ -908,7 +735,6 @@ function castRays() {
     const screenX = i * step;
     const rayAngle = player.dir - player.fov / 2 + (i / numRays) * player.fov;
     const sin = Math.sin(rayAngle), cos = Math.cos(rayAngle);
-
     let dist = 0.01, hit = false, side = 0, cellType = 1, wallX = 0, doorProgress = 0;
     const stepSize = 0.02;
 
@@ -935,29 +761,22 @@ function castRays() {
     }
 
     zbuffer[i] = dist;
-
     const correctedDist = Math.max(0.1, dist * Math.cos(rayAngle - player.dir));
     const wallH = Math.min(H * 4, (H / correctedDist) * 0.9);
     const y0 = horizon - wallH / 2;
 
     let shade = Math.max(0.15, 1 - correctedDist / 12);
     if (side === 1) shade *= 0.75;
-
     const hitX = player.x + cos * dist;
     const hitY = player.y + sin * dist;
-    const light = getLightAt(hitX, hitY);
-    shade = Math.min(1.5, shade + light);
+    shade = Math.min(1.5, shade + getLightAt(hitX, hitY));
 
     if (cellType === 5) {
       drawWindowView(screenX, y0, wallH, rayW, wallX, shade);
     } else if (cellType === 2 || cellType === 13) {
-      const doorOffset = doorProgress;
       ctx.fillStyle = wallColor(cellType, shade, wallX);
       ctx.fillRect(screenX, y0, rayW, wallH);
-      ctx.fillStyle = `rgba(0,0,0,${0.3 * doorOffset})`;
-      ctx.fillRect(screenX, y0, rayW, wallH);
       ctx.strokeStyle = `rgba(0,0,0,${0.5*shade})`;
-      ctx.lineWidth = 2;
       ctx.strokeRect(screenX, y0, rayW, wallH);
     } else {
       ctx.fillStyle = wallColor(cellType, shade, wallX);
@@ -970,13 +789,7 @@ function castRays() {
       ctx.fillStyle = `rgba(255,240,180,${beam * 0.35})`;
       ctx.fillRect(screenX, y0, rayW, wallH);
     }
-
-    if (cellType !== 5 && cellType !== 3 && cellType !== 11 && cellType !== 12) {
-      ctx.fillStyle = `rgba(0,0,0,${0.4 * shade})`;
-      ctx.fillRect(screenX, y0 + wallH - wallH * 0.06, rayW, wallH * 0.06);
-    }
   }
-
   return zbuffer;
 }
 
@@ -986,27 +799,21 @@ function drawMonster(zbuffer, horizon) {
   const dx = monster.x - player.x;
   const dy = monster.y - player.y;
   const dist = Math.hypot(dx, dy);
-
   let angle = Math.atan2(dy, dx) - player.dir;
   while (angle < -Math.PI) angle += Math.PI * 2;
   while (angle > Math.PI) angle -= Math.PI * 2;
-
   if (Math.abs(angle) > player.fov / 2 + 0.2) return;
-
   const screenX = (0.5 + angle / player.fov) * W;
   const correctedDist = dist * Math.cos(angle);
   const size = Math.min(H * 2, (H / correctedDist) * 0.8);
   const y0 = horizon - size / 2;
-
   const rayIndex = Math.floor((screenX / W) * zbuffer.length);
   if (rayIndex >= 0 && rayIndex < zbuffer.length && zbuffer[rayIndex] < correctedDist) return;
-
   const alpha = Math.max(0.3, 1 - correctedDist / 10);
   ctx.fillStyle = `rgba(10,0,0,${alpha})`;
   ctx.beginPath();
   ctx.ellipse(screenX, y0 + size * 0.5, size * 0.25, size * 0.5, 0, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.fillStyle = `rgba(255,0,0,${alpha})`;
   ctx.beginPath();
   ctx.arc(screenX - size * 0.08, y0 + size * 0.35, size * 0.03, 0, Math.PI * 2);
@@ -1030,11 +837,9 @@ function update(dt) {
   if (keys['arrowright']) player.dir += 0.04;
 
   const moving = Math.abs(mx) > 0.1 || Math.abs(my) > 0.1;
-
   const sin = Math.sin(player.dir), cos = Math.cos(player.dir);
   const nx = player.x + (cos * my - sin * mx) * player.speed;
   const ny = player.y + (sin * my + cos * mx) * player.speed;
-
   if (!isSolid(nx, player.y)) player.x = nx;
   if (!isSolid(player.x, ny)) player.y = ny;
 
@@ -1067,11 +872,9 @@ function loop(now) {
   const dt = Math.min(0.1, (now - lastTime) / 1000);
   lastTime = now;
   gameTime += dt;
-
   update(dt);
 
   const horizon = H / 2 + player.pitch;
-
   const ceilGrad = ctx.createLinearGradient(0, 0, 0, Math.max(1, horizon));
   ceilGrad.addColorStop(0, '#050505');
   ceilGrad.addColorStop(1, '#12100e');
@@ -1108,7 +911,6 @@ function loop(now) {
     flash.style.opacity = 0.05 + Math.random() * 0.1;
     setTimeout(() => flash.style.opacity = 0, 100);
   }
-
   if (monsterActive && Math.random() < 0.005) playWhisper();
 
   requestAnimationFrame(loop);
@@ -1116,4 +918,4 @@ function loop(now) {
 requestAnimationFrame(loop);
 </script>
 </body>
-</html>
+               </html>
