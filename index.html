@@ -130,6 +130,31 @@
     text-shadow: 0 0 10px rgba(255,200,0,0.6);
     pointer-events: none; z-index: 30;
   }
+
+  /* Экран блокировки портретной ориентации */
+  #rotateOverlay {
+    position: fixed; inset: 0; background: #000; z-index: 9999;
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #ff3333; font-size: 18px; letter-spacing: 3px;
+    text-shadow: 0 0 15px #ff0000; text-align: center;
+    padding: 40px;
+  }
+  #rotateOverlay .icon {
+    font-size: 80px; margin-bottom: 30px;
+    animation: rotateHint 2s infinite ease-in-out;
+  }
+  @keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(90deg); }
+  }
+  @media (orientation: portrait) {
+    #rotateOverlay { display: flex; }
+    #game, #ui, #moveZone, #lookZone, #joy, #btnStack, #fsBtn,
+    #crosshair, #vignette, #flash, #msg, #note, #interact, #inventory {
+      display: none !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -160,6 +185,11 @@
 
 <div id="fsBtn">⛶</div>
 
+<div id="rotateOverlay">
+  <div class="icon">📱</div>
+  <div>ПОВЕРНИТЕ УСТРОЙСТВО ГОРИЗОНТАЛЬНО</div>
+</div>
+
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -176,60 +206,72 @@ window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 100));
 resize();
 
+// Попытка заблокировать ориентацию (работает в fullscreen на Android)
+function tryLockOrientation() {
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(() => {});
+  }
+}
+
 // ===== КАРТА ДОМА =====
 // 0 = пол, 1 = обои, 2 = дверь, 3 = окно смерти, 4 = дерево,
 // 5 = окно (вид на улицу), 6 = стол, 7 = компьютер, 8 = ковёр,
 // 9 = шкаф, 10 = лампа, 11 = записка, 12 = ключ, 13 = запертая дверь
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,5,0,0,0,0,0,0,1,5,0,0,0,0,0,1,5,0,0,1],
-  [1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,1],
+  [1,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,5,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,1,1,2,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,1],
-  [1,5,0,0,0,0,0,0,1,5,0,0,0,0,0,1,5,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,5,1],
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
-// Мебель как спрайты
+// Мебель как спрайты (фиксирована в мире, привязана к полу)
 const sprites = [
-  // Спальня 1
-  { type: 'bed',        x: 2.5,  y: 2.0,  w: 1.6, h: 1.0 },
-  { type: 'nightstand', x: 1.2,  y: 1.5,  w: 0.6, h: 0.6 },
-  { type: 'lamp',       x: 1.2,  y: 1.5,  w: 0.3, h: 0.3, on: true, power: 0.6 },
-  // Комната с компьютером
-  { type: 'table',      x: 11.5, y: 2.5,  w: 2.0, h: 0.9 },
-  { type: 'computer',   x: 11.5, y: 1.8,  w: 1.0, h: 0.7 },
-  { type: 'chair',      x: 11.5, y: 3.6,  w: 0.6, h: 0.6 },
-  { type: 'lamp',       x: 12.8, y: 2.2,  w: 0.3, h: 0.3, on: true, power: 0.5 },
-  // Гостиная
-  { type: 'sofa',       x: 17.5, y: 2.5,  w: 2.2, h: 1.0 },
-  { type: 'table',      x: 17.5, y: 4.2,  w: 1.4, h: 0.8 },
-  { type: 'shelf',      x: 18.5, y: 1.2,  w: 1.0, h: 0.5 },
-  { type: 'lamp',       x: 16.5, y: 1.2,  w: 0.3, h: 0.3, on: true, power: 0.5 },
-  // Кухня
-  { type: 'stove',      x: 2.0,  y: 12.0, w: 0.9, h: 0.9 },
-  { type: 'fridge',     x: 3.2,  y: 12.0, w: 0.9, h: 0.9 },
-  { type: 'table',      x: 4.5,  y: 12.5, w: 1.6, h: 0.9 },
-  { type: 'chair',      x: 4.5,  y: 13.6, w: 0.6, h: 0.6 },
-  { type: 'lamp',       x: 3.0,  y: 11.5, w: 0.3, h: 0.3, on: true, power: 0.6 },
-  // Окно смерти
-  { type: 'lamp',       x: 8.5,  y: 12.5, w: 0.3, h: 0.3, on: false, power: 0.4 },
-  // Спальня 2
-  { type: 'bed',        x: 16.5, y: 12.0, w: 1.6, h: 1.0 },
-  { type: 'nightstand', x: 15.2, y: 12.0, w: 0.6, h: 0.6 },
-  { type: 'lamp',       x: 15.2, y: 12.0, w: 0.3, h: 0.3, on: false, power: 0.5 },
-  { type: 'shelf',      x: 18.5, y: 13.5, w: 1.0, h: 0.5 },
+  // === СПАЛЬНЯ (левый верх) ===
+  { type: 'bed',        x: 2.5,  y: 2.5,  w: 1.6, h: 1.2 },
+  { type: 'nightstand', x: 1.5,  y: 2.5,  w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 1.5,  y: 2.5,  w: 0.35, h: 0.35, on: true, power: 0.7 },
+
+  // === СТОЛ С КОМПЬЮТЕРОМ (центр-верх) ===
+  { type: 'table',      x: 10.5, y: 3.5,  w: 2.2, h: 1.0 },
+  { type: 'computer',   x: 10.5, y: 3.0,  w: 1.1, h: 0.8 },
+  { type: 'chair',      x: 10.5, y: 4.8,  w: 0.7, h: 0.7 },
+  { type: 'lamp',       x: 12.2, y: 3.2,  w: 0.35, h: 0.35, on: true, power: 0.6 },
+
+  // === ГОСТИНАЯ (правый верх) ===
+  { type: 'sofa',       x: 16.5, y: 3.0,  w: 2.4, h: 1.2 },
+  { type: 'table',      x: 16.5, y: 5.0,  w: 1.5, h: 0.9 },
+  { type: 'shelf',      x: 18.5, y: 2.0,  w: 1.0, h: 0.6 },
+  { type: 'lamp',       x: 15.5, y: 2.0,  w: 0.35, h: 0.35, on: true, power: 0.6 },
+
+  // === КУХНЯ (левый низ) ===
+  { type: 'stove',      x: 2.0,  y: 12.5, w: 1.0, h: 1.0 },
+  { type: 'fridge',     x: 3.5,  y: 12.5, w: 1.0, h: 1.2 },
+  { type: 'table',      x: 5.0,  y: 13.0, w: 1.8, h: 1.0 },
+  { type: 'chair',      x: 5.0,  y: 14.3, w: 0.7, h: 0.7 },
+  { type: 'lamp',       x: 3.5,  y: 11.5, w: 0.35, h: 0.35, on: true, power: 0.7 },
+
+  // === ОКНО СМЕРТИ (центр-низ) ===
+  { type: 'lamp',       x: 9.5,  y: 13.0, w: 0.35, h: 0.35, on: false, power: 0.5 },
+
+  // === ВТОРАЯ СПАЛЬНЯ (правый низ) ===
+  { type: 'bed',        x: 16.5, y: 13.0, w: 1.6, h: 1.2 },
+  { type: 'nightstand', x: 15.3, y: 13.0, w: 0.6, h: 0.6 },
+  { type: 'lamp',       x: 15.3, y: 13.0, w: 0.35, h: 0.35, on: false, power: 0.5 },
+  { type: 'shelf',      x: 18.5, y: 14.0, w: 1.0, h: 0.6 },
 ];
 
 const notes = {
@@ -249,14 +291,6 @@ for (let y = 0; y < MAP_H; y++) {
   for (let x = 0; x < MAP_W; x++) {
     if (map[y][x] === 2) doors[`${x},${y}`] = { open: false, progress: 0, locked: false };
     if (map[y][x] === 13) doors[`${x},${y}`] = { open: false, progress: 0, locked: true };
-  }
-}
-
-// Окна
-const windows = [];
-for (let y = 0; y < MAP_H; y++) {
-  for (let x = 0; x < MAP_W; x++) {
-    if (map[y][x] === 5) windows.push({ x, y });
   }
 }
 
@@ -575,6 +609,7 @@ function toggleFullscreen() {
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
     if (el.requestFullscreen) el.requestFullscreen();
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    tryLockOrientation();
   } else {
     if (document.exitFullscreen) document.exitFullscreen();
     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -626,15 +661,10 @@ function wallColor(cellType, shade, wallX) {
   if (cellType === 5) {
     return `rgb(${Math.floor(10*s)},${Math.floor(15*s)},${Math.floor(30*s)})`;
   }
-  if (cellType === 6) return `rgb(${Math.floor(70*s)},${Math.floor(45*s)},${Math.floor(25*s)})`;
-  if (cellType === 7) return `rgb(${Math.floor(25*s)},${Math.floor(25*s)},${Math.floor(30*s)})`;
   if (cellType === 9) {
     const door = Math.floor(wallX * 4) % 2 === 0 ? 1 : 0.85;
     return `rgb(${Math.floor(65*s*door)},${Math.floor(40*s*door)},${Math.floor(25*s*door)})`;
   }
-  if (cellType === 10) return `rgb(${Math.floor(200*s)},${Math.floor(180*s)},${Math.floor(80*s)})`;
-  if (cellType === 11) return `rgb(${Math.floor(230*s)},${Math.floor(220*s)},${Math.floor(190*s)})`;
-  if (cellType === 12) return `rgb(${Math.floor(255*s)},${Math.floor(215*s)},${Math.floor(0)})`;
   const stripe = Math.floor(wallX * 8) % 2 === 0 ? 1 : 0.85;
   return `rgb(${Math.floor(90*s*stripe)},${Math.floor(65*s*stripe)},${Math.floor(50*s*stripe)})`;
 }
@@ -652,70 +682,73 @@ function getLightAt(x, y) {
 
 // ===== ВИД ИЗ ОКНА =====
 function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
-  const topColor = [10, 20, 45];
-  const midColor = [20, 45, 75];
-  const botColor = [30, 70, 100];
-  const t = 1 - wallX;
-  let r, g, b;
-  if (t < 0.5) {
-    const k = t * 2;
-    r = topColor[0] + (midColor[0] - topColor[0]) * k;
-    g = topColor[1] + (midColor[1] - topColor[1]) * k;
-    b = topColor[2] + (midColor[2] - topColor[2]) * k;
-  } else {
-    const k = (t - 0.5) * 2;
-    r = midColor[0] + (botColor[0] - midColor[0]) * k;
-    g = midColor[1] + (botColor[1] - midColor[1]) * k;
-    b = midColor[2] + (botColor[2] - midColor[2]) * k;
-  }
-  r *= shade; g *= shade; b *= shade;
-  ctx.fillStyle = `rgb(${Math.floor(r)},${Math.floor(g)},${Math.floor(b)})`;
+  const skyTop = [5, 10, 25];
+  const skyBot = [30, 60, 100];
+  const t = wallX;
+  const r = skyTop[0] + (skyBot[0] - skyTop[0]) * t;
+  const g = skyTop[1] + (skyBot[1] - skyTop[1]) * t;
+  const b = skyTop[2] + (skyBot[2] - skyTop[2]) * t;
+
+  ctx.fillStyle = `rgb(${Math.floor(r*shade)},${Math.floor(g*shade)},${Math.floor(b*shade)})`;
   ctx.fillRect(screenX, y0, rayW, wallH);
 
-  const moonX = screenX + rayW * 0.5;
-  const moonY = y0 + wallH * 0.18;
-  if (wallX > 0.3 && wallX < 0.7) {
-    ctx.fillStyle = `rgba(220,230,255,${0.9 * shade})`;
+  if (wallX > 0.35 && wallX < 0.65) {
+    const moonX = screenX + rayW * 0.5;
+    const moonY = y0 + wallH * 0.15;
+    const glowGrad = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, wallH * 0.25);
+    glowGrad.addColorStop(0, `rgba(180,200,255,${0.5*shade})`);
+    glowGrad.addColorStop(1, `rgba(180,200,255,0)`);
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(screenX, y0, rayW, wallH);
+    ctx.fillStyle = `rgba(230,235,255,${0.95*shade})`;
     ctx.beginPath();
     ctx.arc(moonX, moonY, wallH * 0.05, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = `rgba(150,180,255,${0.15 * shade})`;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, wallH * 0.12, 0, Math.PI * 2);
-    ctx.fill();
   }
 
-  const treeSeed = Math.floor(wallX * 12);
-  if (treeSeed % 2 === 0 && wallX > 0.1 && wallX < 0.9) {
-    ctx.fillStyle = `rgba(0,5,15,${0.85 * shade})`;
-    const treeX = screenX + rayW * ((treeSeed * 37) % 100) / 100;
-    const treeW = rayW * 3;
-    const treeTop = y0 + wallH * 0.15;
-    const treeBot = y0 + wallH * 0.85;
-    ctx.fillRect(treeX, treeTop, treeW, treeBot - treeTop);
+  const treePositions = [0.15, 0.85];
+  for (const tp of treePositions) {
+    if (wallX > tp - 0.08 && wallX < tp + 0.08) {
+      ctx.fillStyle = `rgba(0,3,10,${0.9*shade})`;
+      const treeX = screenX - rayW;
+      const treeW = rayW * 3;
+      const treeTop = y0 + wallH * 0.1;
+      const treeBot = y0 + wallH * 0.9;
+      ctx.fillRect(treeX + treeW * 0.4, treeTop + wallH * 0.3, treeW * 0.2, treeBot - treeTop - wallH * 0.3);
+      ctx.beginPath();
+      ctx.moveTo(treeX + treeW * 0.5, treeTop);
+      ctx.lineTo(treeX + treeW * 0.1, treeTop + wallH * 0.45);
+      ctx.lineTo(treeX + treeW * 0.9, treeTop + wallH * 0.45);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(treeX + treeW * 0.5, treeTop + wallH * 0.2);
+      ctx.lineTo(treeX + treeW * 0.05, treeTop + wallH * 0.65);
+      ctx.lineTo(treeX + treeW * 0.95, treeTop + wallH * 0.65);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 
-  const fogGrad = ctx.createLinearGradient(0, y0 + wallH * 0.6, 0, y0 + wallH);
-  fogGrad.addColorStop(0, `rgba(100,150,200,0)`);
-  fogGrad.addColorStop(1, `rgba(100,150,200,${0.3 * shade})`);
+  const fogGrad = ctx.createLinearGradient(0, y0 + wallH * 0.5, 0, y0 + wallH);
+  fogGrad.addColorStop(0, `rgba(80,130,180,0)`);
+  fogGrad.addColorStop(1, `rgba(80,130,180,${0.45*shade})`);
   ctx.fillStyle = fogGrad;
-  ctx.fillRect(screenX, y0 + wallH * 0.6, rayW, wallH * 0.4);
+  ctx.fillRect(screenX, y0 + wallH * 0.5, rayW, wallH * 0.5);
 
-  ctx.fillStyle = `rgba(20,10,5,${0.95 * shade})`;
-  ctx.fillRect(screenX, y0, rayW, wallH * 0.04);
-  ctx.fillRect(screenX, y0 + wallH * 0.96, rayW, wallH * 0.04);
-  if (Math.abs(wallX - 0.5) < 0.03) {
-    ctx.fillRect(screenX, y0, rayW, wallH);
+  if (wallX > 0.2 && wallX < 0.8) {
+    ctx.fillStyle = `rgba(5,10,15,${0.8*shade})`;
+    ctx.fillRect(screenX, y0 + wallH * 0.85, rayW, wallH * 0.15);
   }
-  if (wallX > 0 && wallX < 0.02) {
-    ctx.fillRect(screenX, y0, rayW, wallH);
-  }
-  if (wallX > 0.98 && wallX < 1) {
-    ctx.fillRect(screenX, y0, rayW, wallH);
-  }
+
+  ctx.fillStyle = `rgba(15,8,4,${0.95*shade})`;
+  ctx.fillRect(screenX, y0, rayW, wallH * 0.05);
+  ctx.fillRect(screenX, y0 + wallH * 0.95, rayW, wallH * 0.05);
+  if (Math.abs(wallX - 0.5) < 0.025) ctx.fillRect(screenX, y0, rayW, wallH);
+  if (wallX < 0.015 || wallX > 0.985) ctx.fillRect(screenX, y0, rayW, wallH);
 }
 
-// ===== СПРАЙТЫ (МЕБЕЛЬ) =====
+// ===== СПРАЙТЫ =====
 function drawSprite(sprite, zbuffer, horizon) {
   const dx = sprite.x - player.x;
   const dy = sprite.y - player.y;
@@ -725,108 +758,163 @@ function drawSprite(sprite, zbuffer, horizon) {
   while (angle < -Math.PI) angle += Math.PI * 2;
   while (angle > Math.PI) angle -= Math.PI * 2;
 
-  if (Math.abs(angle) > player.fov / 2 + 0.3) return;
+  if (Math.abs(angle) > player.fov / 2 + 0.2) return;
 
   const correctedDist = dist * Math.cos(angle);
-  if (correctedDist < 0.1) return;
+  if (correctedDist < 0.15) return;
 
-  const screenX = (0.5 + angle / player.fov) * W;
-  const sizeH = Math.min(H * 3, (H / correctedDist) * sprite.h);
-  const sizeW = Math.min(W, (W / correctedDist) * sprite.w);
-  const y0 = horizon - sizeH / 2 + (H / correctedDist) * 0.2;
-  const x0 = screenX - sizeW / 2;
+  const screenCenterX = (0.5 + angle / player.fov) * W;
+  const scale = H / correctedDist;
+  const sizeH = Math.min(H * 3, scale * sprite.h);
+  const sizeW = Math.min(W * 1.5, scale * sprite.w);
 
-  const rayIndex = Math.floor((screenX / W) * zbuffer.length);
-  if (rayIndex >= 0 && rayIndex < zbuffer.length && zbuffer[rayIndex] < correctedDist) return;
+  const floorY = horizon + (H / correctedDist) * 0.5;
+  const y1 = floorY;
+  const y0 = y1 - sizeH;
 
-  const shade = Math.max(0.2, 1 - correctedDist / 12);
+  const x0 = screenCenterX - sizeW / 2;
+  const x1 = screenCenterX + sizeW / 2;
+
+  const centerIdx = Math.max(0, Math.min(zbuffer.length - 1, Math.floor((screenCenterX / W) * zbuffer.length)));
+  if (zbuffer[centerIdx] < correctedDist) return;
+
+  const shade = Math.max(0.25, 1 - correctedDist / 14);
 
   ctx.save();
   ctx.globalAlpha = 1;
 
   if (sprite.type === 'bed') {
-    ctx.fillStyle = `rgba(${Math.floor(90*shade)},${Math.floor(50*shade)},${Math.floor(40*shade)},1)`;
-    ctx.fillRect(x0, y0 + sizeH * 0.3, sizeW, sizeH * 0.7);
-    ctx.fillStyle = `rgba(${Math.floor(220*shade)},${Math.floor(210*shade)},${Math.floor(190*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.05, y0 + sizeH * 0.3, sizeW * 0.9, sizeH * 0.15);
-    ctx.fillStyle = `rgba(${Math.floor(60*shade)},${Math.floor(30*shade)},${Math.floor(20*shade)},1)`;
-    ctx.fillRect(x0, y0, sizeW, sizeH * 0.35);
+    ctx.fillStyle = `rgb(${Math.floor(40*shade)},${Math.floor(25*shade)},${Math.floor(15*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.02, y0 + sizeH*0.7, sizeW*0.06, sizeH*0.3);
+    ctx.fillRect(x0 + sizeW*0.92, y0 + sizeH*0.7, sizeW*0.06, sizeH*0.3);
+    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(45*shade)},${Math.floor(30*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.35, sizeW, sizeH*0.4);
+    ctx.fillStyle = `rgb(${Math.floor(200*shade)},${Math.floor(190*shade)},${Math.floor(170*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.03, y0 + sizeH*0.3, sizeW*0.94, sizeH*0.15);
+    ctx.fillStyle = `rgb(${Math.floor(240*shade)},${Math.floor(235*shade)},${Math.floor(220*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.18, sizeW*0.3, sizeH*0.15);
+    ctx.fillStyle = `rgb(${Math.floor(100*shade)},${Math.floor(50*shade)},${Math.floor(60*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.35, y0 + sizeH*0.3, sizeW*0.62, sizeH*0.15);
+    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(35*shade)},${Math.floor(20*shade)})`;
+    ctx.fillRect(x0, y0, sizeW, sizeH*0.35);
   } else if (sprite.type === 'nightstand') {
-    ctx.fillStyle = `rgba(${Math.floor(80*shade)},${Math.floor(50*shade)},${Math.floor(30*shade)},1)`;
+    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(50*shade)},${Math.floor(30*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgba(${Math.floor(50*shade)},${Math.floor(30*shade)},${Math.floor(20*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.3, sizeW * 0.8, sizeH * 0.05);
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.6, sizeW * 0.8, sizeH * 0.05);
+    ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(30*shade)},${Math.floor(20*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.3, sizeW*0.8, sizeH*0.06);
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.6, sizeW*0.8, sizeH*0.06);
+    ctx.fillStyle = `rgb(${Math.floor(200*shade)},${Math.floor(180*shade)},${Math.floor(100*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.45, y0 + sizeH*0.32, sizeW*0.1, sizeH*0.04);
+    ctx.fillRect(x0 + sizeW*0.45, y0 + sizeH*0.62, sizeW*0.1, sizeH*0.04);
   } else if (sprite.type === 'table') {
-    ctx.fillStyle = `rgba(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)},1)`;
-    ctx.fillRect(x0, y0 + sizeH * 0.1, sizeW, sizeH * 0.15);
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.25, sizeW * 0.08, sizeH * 0.75);
-    ctx.fillRect(x0 + sizeW * 0.82, y0 + sizeH * 0.25, sizeW * 0.08, sizeH * 0.75);
+    ctx.fillStyle = `rgb(${Math.floor(90*shade)},${Math.floor(60*shade)},${Math.floor(35*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.25, sizeW, sizeH*0.12);
+    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.37, sizeW*0.08, sizeH*0.63);
+    ctx.fillRect(x0 + sizeW*0.87, y0 + sizeH*0.37, sizeW*0.08, sizeH*0.63);
   } else if (sprite.type === 'computer') {
-    ctx.fillStyle = `rgba(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.25, sizeW * 0.8, sizeH * 0.6);
-    const screenGlow = Math.sin(gameTime * 3) > 0 ? 0.9 : 0.6;
-    ctx.fillStyle = `rgba(${Math.floor(30*shade)},${Math.floor(120*shade*screenGlow)},${Math.floor(70*shade*screenGlow)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.15, y0 + sizeH * 0.3, sizeW * 0.7, sizeH * 0.5);
-    ctx.fillStyle = `rgba(${Math.floor(20*shade)},${Math.floor(20*shade)},${Math.floor(25*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.35, y0 + sizeH * 0.85, sizeW * 0.3, sizeH * 0.15);
-    ctx.fillStyle = `rgba(${Math.floor(50*shade)},${Math.floor(50*shade)},${Math.floor(55*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.95, y0 + sizeH * 0.3, sizeW * 0.4, sizeH * 0.6);
+    ctx.fillStyle = `rgb(${Math.floor(30*shade)},${Math.floor(30*shade)},${Math.floor(35*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.55, y0 + sizeH*0.3, sizeW*0.35, sizeH*0.7);
+    ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(200*shade)},${Math.floor(100*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.62, y0 + sizeH*0.4, sizeW*0.04, sizeH*0.5);
+    ctx.fillStyle = `rgb(${Math.floor(20*shade)},${Math.floor(20*shade)},${Math.floor(25*shade)})`;
+    ctx.fillRect(x0, y0, sizeW*0.55, sizeH*0.7);
+    const glow = Math.sin(gameTime * 3) > 0 ? 1 : 0.7;
+    ctx.fillStyle = `rgb(${Math.floor(40*shade)},${Math.floor(150*glow*shade)},${Math.floor(200*glow*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.04, y0 + sizeH*0.05, sizeW*0.47, sizeH*0.55);
+    ctx.fillStyle = `rgba(255,255,255,${0.15*shade})`;
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.08, sizeW*0.15, sizeH*0.5);
+    ctx.fillStyle = `rgb(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.18, y0 + sizeH*0.7, sizeW*0.18, sizeH*0.08);
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.78, sizeW*0.4, sizeH*0.04);
   } else if (sprite.type === 'chair') {
-    ctx.fillStyle = `rgba(${Math.floor(60*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.4, sizeW * 0.8, sizeH * 0.15);
-    ctx.fillRect(x0 + sizeW * 0.15, y0 + sizeH * 0.55, sizeW * 0.08, sizeH * 0.45);
-    ctx.fillRect(x0 + sizeW * 0.77, y0 + sizeH * 0.55, sizeW * 0.08, sizeH * 0.45);
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.05, sizeW * 0.8, sizeH * 0.35);
+    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.45, sizeW*0.8, sizeH*0.12);
+    ctx.fillRect(x0 + sizeW*0.15, y0 + sizeH*0.57, sizeW*0.06, sizeH*0.43);
+    ctx.fillRect(x0 + sizeW*0.79, y0 + sizeH*0.57, sizeW*0.06, sizeH*0.43);
+    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(38*shade)},${Math.floor(20*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.05, sizeW*0.8, sizeH*0.4);
   } else if (sprite.type === 'sofa') {
-    ctx.fillStyle = `rgba(${Math.floor(70*shade)},${Math.floor(40*shade)},${Math.floor(50*shade)},1)`;
-    ctx.fillRect(x0, y0 + sizeH * 0.3, sizeW, sizeH * 0.7);
-    ctx.fillStyle = `rgba(${Math.floor(90*shade)},${Math.floor(50*shade)},${Math.floor(60*shade)},1)`;
-    ctx.fillRect(x0, y0 + sizeH * 0.2, sizeW, sizeH * 0.15);
-    ctx.fillRect(x0, y0 + sizeH * 0.15, sizeW * 0.15, sizeH * 0.85);
-    ctx.fillRect(x0 + sizeW * 0.85, y0 + sizeH * 0.15, sizeW * 0.15, sizeH * 0.85);
+    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(40*shade)},${Math.floor(55*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.35, sizeW, sizeH*0.65);
+    ctx.fillStyle = `rgb(${Math.floor(85*shade)},${Math.floor(50*shade)},${Math.floor(65*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.1, sizeW, sizeH*0.3);
+    ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(35*shade)},${Math.floor(50*shade)})`;
+    ctx.fillRect(x0, y0 + sizeH*0.15, sizeW*0.12, sizeH*0.85);
+    ctx.fillRect(x0 + sizeW*0.88, y0 + sizeH*0.15, sizeW*0.12, sizeH*0.85);
+    ctx.fillStyle = `rgb(${Math.floor(110*shade)},${Math.floor(70*shade)},${Math.floor(80*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.4, sizeW*0.25, sizeH*0.15);
+    ctx.fillRect(x0 + sizeW*0.55, y0 + sizeH*0.4, sizeW*0.25, sizeH*0.15);
   } else if (sprite.type === 'shelf') {
-    ctx.fillStyle = `rgba(${Math.floor(65*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)},1)`;
+    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(25*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgba(0,0,0,${0.6*shade})`;
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.3, sizeW*0.84, sizeH*0.06);
+    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.65, sizeW*0.84, sizeH*0.06);
+    const bookColors = [[180,50,50],[50,120,180],[200,180,60],[80,180,90]];
+    for (let i = 0; i < 4; i++) {
+      const c = bookColors[i];
+      ctx.fillStyle = `rgb(${Math.floor(c[0]*shade)},${Math.floor(c[1]*shade)},${Math.floor(c[2]*shade)})`;
+      ctx.fillRect(x0 + sizeW*(0.12 + i*0.2), y0 + sizeH*0.38, sizeW*0.15, sizeH*0.25);
+      ctx.fillRect(x0 + sizeW*(0.12 + i*0.2), y0 + sizeH*0.73, sizeW*0.15, sizeH*0.25);
+    }
+ }
+   } else if (sprite.type === 'stove') {
+    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(80*shade)},${Math.floor(85*shade)})`;
+    ctx.fillRect(x0, y0, sizeW, sizeH);
+    ctx.fillStyle = `rgb(${Math.floor(20*shade)},${Math.floor(20*shade)},${Math.floor(25*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.05, sizeW*0.9, sizeH*0.15);
+    ctx.fillStyle = `rgba(150,30,20,${0.7*shade})`;
+    ctx.beginPath();
+    ctx.arc(x0 + sizeW*0.25, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
+    ctx.arc(x0 + sizeW*0.55, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
+    ctx.arc(x0 + sizeW*0.4, y0 + sizeH*0.05, sizeW*0.06, 0, Math.PI*2);
+    ctx.fill();
     ctx.fillStyle = `rgba(0,0,0,${0.5*shade})`;
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.25, sizeW * 0.8, sizeH * 0.1);
-    ctx.fillRect(x0 + sizeW * 0.1, y0 + sizeH * 0.55, sizeW * 0.8, sizeH * 0.1);
-    ctx.fillStyle = `rgba(${Math.floor(150*shade)},${Math.floor(120*shade)},${Math.floor(60*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.15, y0 + sizeH * 0.4, sizeW * 0.15, sizeH * 0.15);
-    ctx.fillRect(x0 + sizeW * 0.35, y0 + sizeH * 0.4, sizeW * 0.15, sizeH * 0.15);
-    ctx.fillRect(x0 + sizeW * 0.55, y0 + sizeH * 0.4, sizeW * 0.15, sizeH * 0.15);
-  } else if (sprite.type === 'stove') {
-    ctx.fillStyle = `rgba(${Math.floor(60*shade)},${Math.floor(60*shade)},${Math.floor(65*shade)},1)`;
-    ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgba(0,0,0,${0.8*shade})`;
-    ctx.fillRect(x0 + sizeW * 0.05, y0 + sizeH * 0.1, sizeW * 0.9, sizeH * 0.08);
-    ctx.fillStyle = `rgba(${Math.floor(200*shade)},${Math.floor(50*shade)},${Math.floor(30*shade)},0.5)`;
-    ctx.beginPath();
-    ctx.arc(x0 + sizeW * 0.3, y0 + sizeH * 0.25, sizeW * 0.08, 0, Math.PI * 2);
-    ctx.arc(x0 + sizeW * 0.7, y0 + sizeH * 0.25, sizeW * 0.08, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.35, sizeW*0.8, sizeH*0.55);
+    ctx.fillStyle = `rgba(150,150,150,${0.6*shade})`;
+    ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.45, sizeW*0.6, sizeH*0.35);
   } else if (sprite.type === 'fridge') {
-    ctx.fillStyle = `rgba(${Math.floor(180*shade)},${Math.floor(180*shade)},${Math.floor(190*shade)},1)`;
+    ctx.fillStyle = `rgb(${Math.floor(200*shade)},${Math.floor(200*shade)},${Math.floor(205*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgba(0,0,0,${0.3*shade})`;
-    ctx.fillRect(x0 + sizeW * 0.05, y0 + sizeH * 0.45, sizeW * 0.9, sizeH * 0.05);
-    ctx.fillStyle = `rgba(${Math.floor(80*shade)},${Math.floor(80*shade)},${Math.floor(90*shade)},1)`;
-    ctx.fillRect(x0 + sizeW * 0.85, y0 + sizeH * 0.5, sizeW * 0.05, sizeH * 0.15);
+    ctx.fillStyle = `rgba(0,0,0,${0.4*shade})`;
+    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.35, sizeW*0.9, sizeH*0.02);
+    ctx.fillStyle = `rgb(${Math.floor(100*shade)},${Math.floor(100*shade)},${Math.floor(110*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.15, sizeW*0.06, sizeH*0.15);
+    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.5, sizeW*0.06, sizeH*0.3);
   } else if (sprite.type === 'lamp') {
-    const lampShade = sprite.on ? 1 : 0.3;
-    ctx.fillStyle = `rgba(${Math.floor(255*lampShade)},${Math.floor(220*lampShade)},${Math.floor(120*lampShade)},1)`;
+    const lampShade = sprite.on ? 1 : 0.25;
+    if (sprite.on) {
+      const glow = ctx.createRadialGradient(
+        x0 + sizeW*0.5, y0 + sizeH*0.5, 0,
+        x0 + sizeW*0.5, y0 + sizeH*0.5, sizeW*1.5
+      );
+      glow.addColorStop(0, `rgba(255,220,120,${0.4*shade})`);
+      glow.addColorStop(1, `rgba(255,220,120,0)`);
+      ctx.fillStyle = glow;
+      ctx.fillRect(x0 - sizeW, y0 - sizeH, sizeW*3, sizeH*3);
+    }
+    ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(70*shade)},${Math.floor(50*shade)})`;
+    ctx.fillRect(x0 + sizeW*0.3, y0 + sizeH*0.8, sizeW*0.4, sizeH*0.2);
+    ctx.fillRect(x0 + sizeW*0.48, y0 + sizeH*0.5, sizeW*0.04, sizeH*0.3);
+    ctx.fillStyle = `rgb(${Math.floor(255*lampShade*shade)},${Math.floor(220*lampShade*shade)},${Math.floor(120*lampShade*shade)})`;
     ctx.beginPath();
-    ctx.arc(x0 + sizeW * 0.5, y0 + sizeH * 0.4, sizeW * 0.4, 0, Math.PI * 2);
+    ctx.moveTo(x0 + sizeW*0.3, y0 + sizeH*0.5);
+    ctx.lineTo(x0 + sizeW*0.7, y0 + sizeH*0.5);
+    ctx.lineTo(x0 + sizeW*0.6, y0 + sizeH*0.15);
+    ctx.lineTo(x0 + sizeW*0.4, y0 + sizeH*0.15);
+    ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = `rgba(${Math.floor(180*lampShade)},${Math.floor(150*lampShade)},${Math.floor(80*lampShade)},1)`;
+    ctx.fillStyle = `rgba(255,255,200,${lampShade*0.9*shade})`;
     ctx.beginPath();
-    ctx.arc(x0 + sizeW * 0.5, y0 + sizeH * 0.4, sizeW * 0.25, 0, Math.PI * 2);
+    ctx.arc(x0 + sizeW*0.5, y0 + sizeH*0.55, sizeW*0.08, 0, Math.PI*2);
     ctx.fill();
   }
 
   ctx.restore();
- }
- // ===== RAYCASTING =====
+}
+
+// ===== RAYCASTING =====
 function castRays() {
   const numRays = Math.min(W, 400);
   const step = W / numRays;
@@ -910,7 +998,7 @@ function castRays() {
   return zbuffer;
 }
 
-// ===== МОНСТР (РИСОВАНИЕ) =====
+// ===== МОНСТР =====
 function drawMonster(zbuffer, horizon) {
   if (!monsterActive || !monster || !monster.visible) return;
   const dx = monster.x - player.x;
