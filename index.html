@@ -9,38 +9,28 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
   canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
-
   #ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; color: #8a0000; text-shadow: 0 0 10px #ff0000; z-index: 5; }
   #title { font-size: 12px; letter-spacing: 4px; opacity: 0.6; }
   #hint { font-size: 10px; opacity: 0.5; text-align: center; }
-
   #moveZone { position: fixed; left: 0; top: 0; width: 50%; height: 100%; pointer-events: auto; z-index: 10; touch-action: none; }
   #lookZone { position: fixed; right: 0; top: 0; width: 50%; height: 100%; pointer-events: auto; z-index: 10; touch-action: none; }
-
   #joy { position: fixed; width: 140px; height: 140px; border-radius: 50%; border: 2px solid rgba(255,0,0,0.3); pointer-events: none; opacity: 0; transition: opacity 0.15s; transform: translate(-50%, -50%); z-index: 11; }
   #joy.active { opacity: 1; }
   #joyStick { position: absolute; width: 55px; height: 55px; border-radius: 50%; background: rgba(255,0,0,0.4); top: 42px; left: 42px; box-shadow: 0 0 20px rgba(255,0,0,0.6); }
-
   #btnStack { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; z-index: 20; }
   #actionBtn { width: 75px; height: 75px; border-radius: 50%; background: rgba(255,0,0,0.15); border: 2px solid rgba(255,0,0,0.4); color: #ff3333; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.8; }
-  #actionBtn:active { background: rgba(255,0,0,0.5); opacity: 1; }
   #lightBtn { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,200,0,0.15); border: 2px solid rgba(255,200,0,0.4); color: #ffcc33; font-size: 22px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.7; }
   #lightBtn.on { background: rgba(255,200,0,0.5); }
-
   #fsBtn { position: fixed; right: 20px; top: 20px; width: 44px; height: 44px; border-radius: 8px; background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.4); color: #ff3333; font-size: 20px; display: flex; align-items: center; justify-content: center; pointer-events: auto; touch-action: none; opacity: 0.6; z-index: 20; }
-
   #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border-radius: 50%; background: rgba(255,50,50,0.6); pointer-events: none; box-shadow: 0 0 8px #ff0000; z-index: 5; }
   #vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle, transparent 45%, rgba(0,0,0,0.75) 100%); z-index: 6; }
   #flash { position: fixed; inset: 0; pointer-events: none; background: #ff0000; opacity: 0; transition: opacity 0.15s; z-index: 7; }
-
   #msg { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); color: #ff4444; font-size: 16px; letter-spacing: 2px; text-shadow: 0 0 12px #ff0000; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 30; text-align: center; padding: 0 20px; }
   #note { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(20,10,5,0.95); border: 2px solid #8a0000; color: #d4a373; font-size: 14px; line-height: 1.6; padding: 25px 30px; max-width: 90%; width: 340px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 40; }
   #note.show { opacity: 1; }
   #note h3 { color: #ff3333; margin-bottom: 12px; font-size: 16px; letter-spacing: 3px; }
-
   #interact { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); color: #ff8888; font-size: 13px; letter-spacing: 2px; text-shadow: 0 0 10px #ff0000; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 30; text-align: center; }
   #inventory { position: fixed; top: 20px; left: 20px; color: #ffcc33; font-size: 14px; letter-spacing: 2px; pointer-events: none; z-index: 30; }
-
   #rotateOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; color: #ff3333; font-size: 16px; letter-spacing: 3px; text-align: center; padding: 30px; }
   #rotateOverlay .icon { font-size: 70px; margin-bottom: 25px; animation: rotateHint 2s infinite ease-in-out; }
   @keyframes rotateHint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
@@ -97,10 +87,8 @@ function tryLockOrientation() {
     screen.orientation.lock('landscape').catch(() => {});
   }
 }
-
-// ===== КАРТА ДОМА — МНОГО КОМНАТ =====
-// 0=пол, 1=обои, 2=дверь, 3=окно смерти, 4=дерево, 5=окно,
-// 8=ковёр, 11=записка, 12=ключ, 13=запертая дверь
+</script>
+<script>
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,5,0,0,0,0,0,5,1,5,0,0,0,0,5,1,5,0,0,0,0,0,5,1],
@@ -173,7 +161,8 @@ const player = {
   flashlight: false,
   battery: 1.0
 };
- // ===== ЗВУК =====
+ </script>
+ <script>
 let audioCtx = null;
 function initAudio() {
   if (audioCtx) return;
@@ -217,8 +206,9 @@ function playWhisper() {
   osc.connect(gain); gain.connect(audioCtx.destination);
   osc.start(); osc.stop(audioCtx.currentTime + 1.2);
 }
+</script>
 
-// ===== УПРАВЛЕНИЕ =====
+<script>
 const keys = {};
 window.addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
@@ -407,160 +397,8 @@ function showNote(title, text) {
   noteEl.classList.add('show');
   setTimeout(() => noteEl.classList.remove('show'), 4000);
 }
-
-function activateMonster() {
-  monsterActive = true;
-  monster = { x: 2.5, y: 14.5, speed: 0.012, visible: false };
-  showMsg('...что-то проснулось в доме...');
-  playWhisper();
-  setTimeout(playWhisper, 800);
-  setTimeout(playWhisper, 1600);
-}
-function updateMonster() {
-  if (!monsterActive || !monster) return;
-  const dx = player.x - monster.x, dy = player.y - monster.y;
-  const dist = Math.hypot(dx, dy);
-  if (dist > 0.8) {
-    const nx = monster.x + (dx/dist)*monster.speed;
-    const ny = monster.y + (dy/dist)*monster.speed;
-    if (!isSolid(nx, monster.y)) monster.x = nx;
-    if (!isSolid(monster.x, ny)) monster.y = ny;
-  } else {
-    document.getElementById('flash').style.opacity = 0.9;
-    setTimeout(() => document.getElementById('flash').style.opacity = 0, 500);
-    playWhisper();
-    monster.x = 2.5; monster.y = 14.5;
-    showMsg('ОНО ПРИКОСНУЛОСЬ К ТЕБЕ');
-  }
-  monster.visible = dist < 8;
- }
- document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
-document.getElementById('fsBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFullscreen(); }, { passive: false });
-function toggleFullscreen() {
-  const el = document.documentElement;
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    tryLockOrientation();
-  } else {
-    if (document.exitFullscreen) document.exitFullscreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  }
-  setTimeout(resize, 300);
-}
-
-function updateDoors() {
-  for (const key in doors) {
-    const d = doors[key];
-    const target = d.open ? 1 : 0;
-    d.progress += (target - d.progress) * 0.08;
-    if (Math.abs(d.progress - target) < 0.01) d.progress = target;
-  }
-}
-function isSolid(x, y) {
-  const mx = Math.floor(x), my = Math.floor(y);
-  if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) return true;
-  const cell = map[my][mx];
-  if (cell === 0 || cell === 8 || cell === 11 || cell === 12) return false;
-  if (cell === 2 || cell === 13) {
-    const key = `${mx},${my}`;
-    const door = doors[key];
-    if (door && door.progress > 0.5) return false;
-    return true;
-  }
-  return true;
-}
-
-function wallColor(cellType, shade, wallX) {
-  const s = shade;
-  if (cellType === 2 || cellType === 13) {
-    const edge = (wallX < 0.05 || wallX > 0.95) ? 0.6 : 1;
-    const handle = (wallX > 0.85 && wallX < 0.92) ? 1.6 : 1;
-    return `rgb(${Math.floor(120*s*edge*handle)},${Math.floor(75*s*edge*handle)},${Math.floor(35*s*edge*handle)})`;
-  }
-  if (cellType === 3) {
-    const crack = Math.sin(wallX * 60) > 0.7 ? 0.5 : 1;
-    return `rgb(${Math.floor(200*s*crack)},${Math.floor(30*s*crack)},${Math.floor(30*s*crack)})`;
-  }
-  if (cellType === 4) {
-    const plank = Math.floor(wallX * 10) % 2 === 0 ? 1 : 0.8;
-    return `rgb(${Math.floor(85*s*plank)},${Math.floor(55*s*plank)},${Math.floor(35*s*plank)})`;
-  }
-  if (cellType === 5) return `rgb(${Math.floor(10*s)},${Math.floor(15*s)},${Math.floor(30*s)})`;
-  if (cellType === 9) {
-    const door = Math.floor(wallX * 4) % 2 === 0 ? 1 : 0.85;
-    return `rgb(${Math.floor(65*s*door)},${Math.floor(40*s*door)},${Math.floor(25*s*door)})`;
-  }
-  const stripe = Math.floor(wallX * 8) % 2 === 0 ? 1 : 0.88;
-  return `rgb(${Math.floor(160*s*stripe)},${Math.floor(130*s*stripe)},${Math.floor(100*s*stripe)})`;
-}
-
-function getLightAt(x, y) {
-  let light = 0.35;
-  for (const s of sprites) {
-    if (s.type !== 'lamp' || !s.on) continue;
-    const d = Math.hypot(s.x - x, s.y - y);
-    light += (s.power || 0.5) / (1 + d * d * 0.4);
-  }
-  return Math.min(1.6, light);
-}
-
-function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
-  const skyTop = [8, 15, 35];
-  const skyBot = [40, 70, 110];
-  const t = wallX;
-  const r = skyTop[0] + (skyBot[0] - skyTop[0]) * t;
-  const g = skyTop[1] + (skyBot[1] - skyTop[1]) * t;
-  const b = skyTop[2] + (skyBot[2] - skyTop[2]) * t;
-  ctx.fillStyle = `rgb(${Math.floor(r*shade)},${Math.floor(g*shade)},${Math.floor(b*shade)})`;
-  ctx.fillRect(screenX, y0, rayW, wallH);
-
-  if (wallX > 0.35 && wallX < 0.65) {
-    const moonX = screenX + rayW * 0.5;
-    const moonY = y0 + wallH * 0.15;
-    const glowGrad = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, wallH * 0.25);
-    glowGrad.addColorStop(0, `rgba(180,200,255,${0.5*shade})`);
-    glowGrad.addColorStop(1, `rgba(180,200,255,0)`);
-    ctx.fillStyle = glowGrad;
-    ctx.fillRect(screenX, y0, rayW, wallH);
-    ctx.fillStyle = `rgba(230,235,255,${0.95*shade})`;
-    ctx.beginPath(); ctx.arc(moonX, moonY, wallH*0.05, 0, Math.PI*2); ctx.fill();
-  }
-
-  for (const tp of [0.15, 0.85]) {
-    if (wallX > tp - 0.08 && wallX < tp + 0.08) {
-      ctx.fillStyle = `rgba(0,3,10,${0.9*shade})`;
-      const treeX = screenX - rayW;
-      const treeW = rayW * 3;
-      const treeTop = y0 + wallH * 0.1;
-      const treeBot = y0 + wallH * 0.9;
-      ctx.fillRect(treeX + treeW*0.4, treeTop + wallH*0.3, treeW*0.2, treeBot - treeTop - wallH*0.3);
-      ctx.beginPath();
-      ctx.moveTo(treeX + treeW*0.5, treeTop);
-      ctx.lineTo(treeX + treeW*0.1, treeTop + wallH*0.45);
-      ctx.lineTo(treeX + treeW*0.9, treeTop + wallH*0.45);
-      ctx.closePath(); ctx.fill();
-    }
-  }
-
-  const fogGrad = ctx.createLinearGradient(0, y0 + wallH*0.5, 0, y0 + wallH);
-  fogGrad.addColorStop(0, `rgba(80,130,180,0)`);
-  fogGrad.addColorStop(1, `rgba(80,130,180,${0.45*shade})`);
-  ctx.fillStyle = fogGrad;
-  ctx.fillRect(screenX, y0 + wallH*0.5, rayW, wallH*0.5);
-
-  if (wallX > 0.2 && wallX < 0.8) {
-    ctx.fillStyle = `rgba(5,10,15,${0.8*shade})`;
-    ctx.fillRect(screenX, y0 + wallH*0.85, rayW, wallH*0.15);
-  }
-
-  ctx.fillStyle = `rgba(60,40,25,${0.95*shade})`;
-  ctx.fillRect(screenX, y0, rayW, wallH*0.06);
-  ctx.fillRect(screenX, y0 + wallH*0.94, rayW, wallH*0.06);
-  if (Math.abs(wallX - 0.5) < 0.025) ctx.fillRect(screenX, y0, rayW, wallH);
-  if (wallX < 0.015 || wallX > 0.985) ctx.fillRect(screenX, y0, rayW, wallH);
-}
-
+</script>
+<script>
 function drawSprite(sprite, zbuffer, horizon) {
   const dx = sprite.x - player.x;
   const dy = sprite.y - player.y;
@@ -606,16 +444,12 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(35*shade)},${Math.floor(22*shade)})`;
     ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.3, sizeW*0.84, sizeH*0.05);
     ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.6, sizeW*0.84, sizeH*0.05);
-    ctx.fillStyle = `rgb(${Math.floor(220*shade)},${Math.floor(190*shade)},${Math.floor(100*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.42, y0 + sizeH*0.32, sizeW*0.16, sizeH*0.04);
-    ctx.fillRect(x0 + sizeW*0.42, y0 + sizeH*0.62, sizeW*0.16, sizeH*0.04);
   } else if (sprite.type === 'table') {
     ctx.fillStyle = `rgb(${Math.floor(110*shade)},${Math.floor(75*shade)},${Math.floor(45*shade)})`;
     ctx.fillRect(x0, y0 + sizeH*0.25, sizeW, sizeH*0.1);
     ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(45*shade)},${Math.floor(28*shade)})`;
     ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.35, sizeW*0.07, sizeH*0.65);
     ctx.fillRect(x0 + sizeW*0.88, y0 + sizeH*0.35, sizeW*0.07, sizeH*0.65);
-    ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.7, sizeW*0.9, sizeH*0.03);
   } else if (sprite.type === 'computer') {
     ctx.fillStyle = `rgb(${Math.floor(35*shade)},${Math.floor(35*shade)},${Math.floor(40*shade)})`;
     ctx.fillRect(x0 + sizeW*0.6, y0 + sizeH*0.35, sizeW*0.3, sizeH*0.65);
@@ -626,8 +460,6 @@ function drawSprite(sprite, zbuffer, horizon) {
     const glow = Math.sin(gameTime * 3) > 0 ? 1 : 0.7;
     ctx.fillStyle = `rgb(${Math.floor(50*shade)},${Math.floor(150*glow*shade)},${Math.floor(200*glow*shade)})`;
     ctx.fillRect(x0 + sizeW*0.04, y0 + sizeH*0.05, sizeW*0.47, sizeH*0.55);
-    ctx.fillStyle = `rgba(255,255,255,${0.18*shade})`;
-    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.08, sizeW*0.12, sizeH*0.5);
     ctx.fillStyle = `rgb(${Math.floor(30*shade)},${Math.floor(30*shade)},${Math.floor(35*shade)})`;
     ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.72, sizeW*0.15, sizeH*0.06);
     ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.78, sizeW*0.35, sizeH*0.04);
@@ -639,25 +471,17 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)})`;
     ctx.fillRect(x0 + sizeW*0.15, y0 + sizeH*0.55, sizeW*0.06, sizeH*0.45);
     ctx.fillRect(x0 + sizeW*0.79, y0 + sizeH*0.55, sizeW*0.06, sizeH*0.45);
-  }
- }
-   else if (sprite.type === 'sofa') {
+  } else if (sprite.type === 'sofa') {
     ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(45*shade)},${Math.floor(60*shade)})`;
     ctx.fillRect(x0, y0 + sizeH*0.4, sizeW, sizeH*0.6);
     ctx.fillStyle = `rgb(${Math.floor(95*shade)},${Math.floor(55*shade)},${Math.floor(70*shade)})`;
     ctx.fillRect(x0, y0 + sizeH*0.15, sizeW, sizeH*0.3);
-    ctx.fillStyle = `rgb(${Math.floor(70*shade)},${Math.floor(40*shade)},${Math.floor(55*shade)})`;
-    ctx.fillRect(x0, y0 + sizeH*0.2, sizeW*0.1, sizeH*0.8);
-    ctx.fillRect(x0 + sizeW*0.9, y0 + sizeH*0.2, sizeW*0.1, sizeH*0.8);
     ctx.fillStyle = `rgb(${Math.floor(130*shade)},${Math.floor(80*shade)},${Math.floor(95*shade)})`;
     ctx.fillRect(x0 + sizeW*0.18, y0 + sizeH*0.42, sizeW*0.28, sizeH*0.15);
     ctx.fillRect(x0 + sizeW*0.54, y0 + sizeH*0.42, sizeW*0.28, sizeH*0.15);
   } else if (sprite.type === 'shelf') {
     ctx.fillStyle = `rgb(${Math.floor(85*shade)},${Math.floor(55*shade)},${Math.floor(32*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
-    ctx.fillStyle = `rgba(0,0,0,${0.5*shade})`;
-    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.3, sizeW*0.84, sizeH*0.04);
-    ctx.fillRect(x0 + sizeW*0.08, y0 + sizeH*0.65, sizeW*0.84, sizeH*0.04);
     const bookColors = [[180,50,50],[50,120,180],[200,180,60],[80,180,90]];
     for (let i = 0; i < 4; i++) {
       const c = bookColors[i];
@@ -669,23 +493,11 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.fillRect(x0, y0, sizeW, sizeH);
     ctx.fillStyle = `rgb(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)})`;
     ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.05, sizeW*0.9, sizeH*0.15);
-    ctx.fillStyle = `rgba(180,40,25,${0.8*shade})`;
-    ctx.beginPath();
-    ctx.arc(x0 + sizeW*0.25, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
-    ctx.arc(x0 + sizeW*0.55, y0 + sizeH*0.12, sizeW*0.07, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = `rgba(0,0,0,${0.5*shade})`;
-    ctx.fillRect(x0 + sizeW*0.1, y0 + sizeH*0.35, sizeW*0.8, sizeH*0.55);
-    ctx.fillStyle = `rgba(160,160,160,${0.6*shade})`;
-    ctx.fillRect(x0 + sizeW*0.2, y0 + sizeH*0.45, sizeW*0.6, sizeH*0.35);
   } else if (sprite.type === 'fridge') {
     ctx.fillStyle = `rgb(${Math.floor(210*shade)},${Math.floor(210*shade)},${Math.floor(215*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
     ctx.fillStyle = `rgba(0,0,0,${0.35*shade})`;
     ctx.fillRect(x0 + sizeW*0.05, y0 + sizeH*0.35, sizeW*0.9, sizeH*0.02);
-    ctx.fillStyle = `rgb(${Math.floor(110*shade)},${Math.floor(110*shade)},${Math.floor(120*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.15, sizeW*0.05, sizeH*0.15);
-    ctx.fillRect(x0 + sizeW*0.85, y0 + sizeH*0.5, sizeW*0.05, sizeH*0.3);
   } else if (sprite.type === 'lamp') {
     const lampShade = sprite.on ? 1 : 0.3;
     if (sprite.on) {
@@ -695,9 +507,6 @@ function drawSprite(sprite, zbuffer, horizon) {
       ctx.fillStyle = glow;
       ctx.fillRect(x0 - sizeW, y0 - sizeH, sizeW*3, sizeH*3);
     }
-    ctx.fillStyle = `rgb(${Math.floor(90*shade)},${Math.floor(75*shade)},${Math.floor(55*shade)})`;
-    ctx.fillRect(x0 + sizeW*0.3, y0 + sizeH*0.8, sizeW*0.4, sizeH*0.2);
-    ctx.fillRect(x0 + sizeW*0.48, y0 + sizeH*0.5, sizeW*0.04, sizeH*0.3);
     ctx.fillStyle = `rgb(${Math.floor(255*lampShade*shade)},${Math.floor(220*lampShade*shade)},${Math.floor(130*lampShade*shade)})`;
     ctx.beginPath();
     ctx.moveTo(x0 + sizeW*0.3, y0 + sizeH*0.5);
@@ -706,15 +515,12 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.lineTo(x0 + sizeW*0.4, y0 + sizeH*0.15);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = `rgba(255,255,200,${lampShade*0.9*shade})`;
-    ctx.beginPath();
-    ctx.arc(x0 + sizeW*0.5, y0 + sizeH*0.55, sizeW*0.08, 0, Math.PI*2);
-    ctx.fill();
   }
 
   ctx.restore();
 }
-
+ </script>
+ <script>
 function castRays() {
   const numRays = Math.min(W, 400);
   const step = W / numRays;
@@ -771,10 +577,6 @@ function castRays() {
       const shift = dp * 0.6;
       ctx.fillStyle = wallColor(cellType, shade, wallX);
       ctx.fillRect(screenX + (wallX > 0.5 ? shift * rayW * 3 : -shift * rayW * 3), y0, rayW, wallH);
-      if (Math.abs(wallX - 0.87) < 0.04 && dp < 0.5) {
-        ctx.fillStyle = `rgb(${Math.floor(220*shade)},${Math.floor(190*shade)},${Math.floor(100*shade)})`;
-        ctx.fillRect(screenX, y0 + wallH * 0.48, rayW, wallH * 0.06);
-      }
       if (dp > 0.1 && dp < 0.75) {
         ctx.fillStyle = `rgba(0,0,0,${dp * 0.6})`;
         ctx.fillRect(screenX, y0, rayW, wallH);
@@ -792,8 +594,9 @@ function castRays() {
     }
   }
   return zbuffer;
- }
- function drawMonster(zbuffer, horizon) {
+}
+
+function drawMonster(zbuffer, horizon) {
   if (!monsterActive || !monster || !monster.visible) return;
   const dx = monster.x - player.x, dy = monster.y - player.y;
   const dist = Math.hypot(dx, dy);
