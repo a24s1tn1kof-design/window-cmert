@@ -99,7 +99,7 @@ function tryLockOrientation() {
 }
 
 // ===== КАРТА ДОМА — МНОГО КОМНАТ =====
-// 0=пол, 1=обои, 2=дверь, 3=окно смерти, 5=окно,
+// 0=пол, 1=обои, 2=дверь, 3=окно смерти, 4=дерево, 5=окно,
 // 8=ковёр, 11=записка, 12=ключ, 13=запертая дверь
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -122,7 +122,6 @@ const map = [
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
-// Спрайты: фиксированные позиции в мире, фиксированный рост (в клетках)
 const sprites = [
   { type: 'bed',        x: 2.5,  y: 2.5,  w: 1.4, h: 0.6 },
   { type: 'nightstand', x: 1.3,  y: 2.5,  w: 0.5, h: 0.5 },
@@ -166,12 +165,15 @@ for (let y = 0; y < MAP_H; y++) {
 }
 
 const player = {
-  x: 5.5, y: 2.5, dir: 0, pitch: 0,
-  fov: Math.PI / 3, speed: 0.045,
-  flashlight: false, battery: 1.0
+  x: 5.5, y: 2.5,
+  dir: 0,
+  pitch: 0,
+  fov: Math.PI / 3,
+  speed: 0.045,
+  flashlight: false,
+  battery: 1.0
 };
-
-// ===== ЗВУК =====
+ // ===== ЗВУК =====
 let audioCtx = null;
 function initAudio() {
   if (audioCtx) return;
@@ -234,7 +236,6 @@ document.addEventListener('mousemove', e => {
   }
 });
 
-// ===== СВАЙП-ОБЗОР =====
 const lookZone = document.getElementById('lookZone');
 let lookTouchId = null;
 let lastLookX = 0, lastLookY = 0;
@@ -268,7 +269,7 @@ lookZone.addEventListener('touchend', e => {
     if (t.identifier === lookTouchId) lookTouchId = null;
   }
 }, { passive: false });
- // ===== ДЖОЙСТИК =====
+
 const moveZone = document.getElementById('moveZone');
 const joyEl = document.getElementById('joy');
 const joyStick = document.getElementById('joyStick');
@@ -316,7 +317,6 @@ moveZone.addEventListener('touchend', e => {
   }
 }, { passive: false });
 
-// ===== ФОНАРИК =====
 document.getElementById('lightBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFlashlight(); }, { passive: false });
 document.getElementById('lightBtn').addEventListener('click', toggleFlashlight);
 function toggleFlashlight() {
@@ -325,7 +325,6 @@ function toggleFlashlight() {
   playTone(600, 0.05, 'square', 0.05);
 }
 
-// ===== ДЕЙСТВИЕ =====
 document.getElementById('actionBtn').addEventListener('touchstart', e => { e.preventDefault(); doAction(); }, { passive: false });
 document.getElementById('actionBtn').addEventListener('click', doAction);
 
@@ -409,7 +408,6 @@ function showNote(title, text) {
   setTimeout(() => noteEl.classList.remove('show'), 4000);
 }
 
-// ===== МОНСТР =====
 function activateMonster() {
   monsterActive = true;
   monster = { x: 2.5, y: 14.5, speed: 0.012, visible: false };
@@ -435,10 +433,8 @@ function updateMonster() {
     showMsg('ОНО ПРИКОСНУЛОСЬ К ТЕБЕ');
   }
   monster.visible = dist < 8;
-}
-
-// ===== ПОЛНОЭКРАННЫЙ =====
-document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
+ }
+ document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
 document.getElementById('fsBtn').addEventListener('touchstart', e => { e.preventDefault(); toggleFullscreen(); }, { passive: false });
 function toggleFullscreen() {
   const el = document.documentElement;
@@ -453,7 +449,6 @@ function toggleFullscreen() {
   setTimeout(resize, 300);
 }
 
-// ===== ДВЕРИ =====
 function updateDoors() {
   for (const key in doors) {
     const d = doors[key];
@@ -476,7 +471,6 @@ function isSolid(x, y) {
   return true;
 }
 
-// ===== ЦВЕТ СТЕНЫ =====
 function wallColor(cellType, shade, wallX) {
   const s = shade;
   if (cellType === 2 || cellType === 13) {
@@ -501,7 +495,6 @@ function wallColor(cellType, shade, wallX) {
   return `rgb(${Math.floor(160*s*stripe)},${Math.floor(130*s*stripe)},${Math.floor(100*s*stripe)})`;
 }
 
-// ===== СВЕТ =====
 function getLightAt(x, y) {
   let light = 0.35;
   for (const s of sprites) {
@@ -512,7 +505,6 @@ function getLightAt(x, y) {
   return Math.min(1.6, light);
 }
 
-// ===== ВИД ИЗ ОКНА =====
 function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
   const skyTop = [8, 15, 35];
   const skyBot = [40, 70, 110];
@@ -569,37 +561,28 @@ function drawWindowView(screenX, y0, wallH, rayW, wallX, shade) {
   if (wallX < 0.015 || wallX > 0.985) ctx.fillRect(screenX, y0, rayW, wallH);
 }
 
-// ===== СПРАЙТЫ (МЕБЕЛЬ) =====
 function drawSprite(sprite, zbuffer, horizon) {
   const dx = sprite.x - player.x;
   const dy = sprite.y - player.y;
   const dist = Math.hypot(dx, dy);
-
   let angle = Math.atan2(dy, dx) - player.dir;
   while (angle < -Math.PI) angle += Math.PI * 2;
   while (angle > Math.PI) angle -= Math.PI * 2;
   if (Math.abs(angle) > player.fov / 2 + 0.3) return;
-
   const correctedDist = dist * Math.cos(angle);
   if (correctedDist < 0.2) return;
-
   const screenCenterX = (0.5 + angle / player.fov) * W;
   const scale = H / correctedDist;
-
   const maxH = H * 0.85;
   const sizeH = Math.min(maxH, scale * sprite.h);
   const sizeW = Math.min(W * 0.9, scale * sprite.w);
-
   const floorY = horizon + (H / correctedDist) * 0.5;
   const y1 = floorY;
   const y0 = y1 - sizeH;
   const x0 = screenCenterX - sizeW / 2;
-
   const centerIdx = Math.max(0, Math.min(zbuffer.length - 1, Math.floor((screenCenterX / W) * zbuffer.length)));
   if (zbuffer[centerIdx] < correctedDist - 0.15) return;
-
   const shade = Math.max(0.35, 1 - correctedDist / 14);
-
   ctx.save();
   ctx.globalAlpha = 1;
 
@@ -656,7 +639,9 @@ function drawSprite(sprite, zbuffer, horizon) {
     ctx.fillStyle = `rgb(${Math.floor(60*shade)},${Math.floor(40*shade)},${Math.floor(25*shade)})`;
     ctx.fillRect(x0 + sizeW*0.15, y0 + sizeH*0.55, sizeW*0.06, sizeH*0.45);
     ctx.fillRect(x0 + sizeW*0.79, y0 + sizeH*0.55, sizeW*0.06, sizeH*0.45);
-  } else if (sprite.type === 'sofa') {
+  }
+ }
+   else if (sprite.type === 'sofa') {
     ctx.fillStyle = `rgb(${Math.floor(80*shade)},${Math.floor(45*shade)},${Math.floor(60*shade)})`;
     ctx.fillRect(x0, y0 + sizeH*0.4, sizeW, sizeH*0.6);
     ctx.fillStyle = `rgb(${Math.floor(95*shade)},${Math.floor(55*shade)},${Math.floor(70*shade)})`;
@@ -679,8 +664,7 @@ function drawSprite(sprite, zbuffer, horizon) {
       ctx.fillStyle = `rgb(${Math.floor(c[0]*shade)},${Math.floor(c[1]*shade)},${Math.floor(c[2]*shade)})`;
       ctx.fillRect(x0 + sizeW*(0.12 + i*0.2), y0 + sizeH*0.38, sizeW*0.13, sizeH*0.24);
     }
- }
-   } else if (sprite.type === 'stove') {
+  } else if (sprite.type === 'stove') {
     ctx.fillStyle = `rgb(${Math.floor(90*shade)},${Math.floor(90*shade)},${Math.floor(95*shade)})`;
     ctx.fillRect(x0, y0, sizeW, sizeH);
     ctx.fillStyle = `rgb(${Math.floor(25*shade)},${Math.floor(25*shade)},${Math.floor(30*shade)})`;
@@ -731,7 +715,6 @@ function drawSprite(sprite, zbuffer, horizon) {
   ctx.restore();
 }
 
-// ===== RAYCASTING =====
 function castRays() {
   const numRays = Math.min(W, 400);
   const step = W / numRays;
@@ -786,12 +769,11 @@ function castRays() {
     } else if (cellType === 2 || cellType === 13) {
       const dp = doorProgress;
       const shift = dp * 0.6;
-      const doorW = rayW;
       ctx.fillStyle = wallColor(cellType, shade, wallX);
-      ctx.fillRect(screenX + (wallX > 0.5 ? shift * rayW * 3 : -shift * rayW * 3), y0, doorW, wallH);
+      ctx.fillRect(screenX + (wallX > 0.5 ? shift * rayW * 3 : -shift * rayW * 3), y0, rayW, wallH);
       if (Math.abs(wallX - 0.87) < 0.04 && dp < 0.5) {
         ctx.fillStyle = `rgb(${Math.floor(220*shade)},${Math.floor(190*shade)},${Math.floor(100*shade)})`;
-        ctx.fillRect(screenX, y0 + wallH * 0.48, doorW, wallH * 0.06);
+        ctx.fillRect(screenX, y0 + wallH * 0.48, rayW, wallH * 0.06);
       }
       if (dp > 0.1 && dp < 0.75) {
         ctx.fillStyle = `rgba(0,0,0,${dp * 0.6})`;
@@ -810,10 +792,8 @@ function castRays() {
     }
   }
   return zbuffer;
-}
-
-// ===== МОНСТР =====
-function drawMonster(zbuffer, horizon) {
+ }
+ function drawMonster(zbuffer, horizon) {
   if (!monsterActive || !monster || !monster.visible) return;
   const dx = monster.x - player.x, dy = monster.y - player.y;
   const dist = Math.hypot(dx, dy);
@@ -839,7 +819,6 @@ function drawMonster(zbuffer, horizon) {
   ctx.fill();
 }
 
-// ===== ОБНОВЛЕНИЕ =====
 let stepTimer = 0;
 let gameTime = 0;
 function update(dt) {
@@ -884,7 +863,6 @@ function update(dt) {
   interactEl.style.opacity = hint ? 1 : 0;
 }
 
-// ===== ЦИКЛ =====
 let lastTime = performance.now();
 function loop(now) {
   const dt = Math.min(0.1, (now - lastTime) / 1000);
