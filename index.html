@@ -131,17 +131,16 @@
     pointer-events: none; z-index: 30;
   }
 
-  /* Экран блокировки портретной ориентации */
   #rotateOverlay {
     position: fixed; inset: 0; background: #000; z-index: 9999;
     display: none; flex-direction: column;
     align-items: center; justify-content: center;
-    color: #ff3333; font-size: 18px; letter-spacing: 3px;
+    color: #ff3333; font-size: 16px; letter-spacing: 3px;
     text-shadow: 0 0 15px #ff0000; text-align: center;
-    padding: 40px;
+    padding: 30px;
   }
   #rotateOverlay .icon {
-    font-size: 80px; margin-bottom: 30px;
+    font-size: 70px; margin-bottom: 25px;
     animation: rotateHint 2s infinite ease-in-out;
   }
   @keyframes rotateHint {
@@ -206,7 +205,6 @@ window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 100));
 resize();
 
-// Попытка заблокировать ориентацию (работает в fullscreen на Android)
 function tryLockOrientation() {
   if (screen.orientation && screen.orientation.lock) {
     screen.orientation.lock('landscape').catch(() => {});
@@ -214,9 +212,6 @@ function tryLockOrientation() {
 }
 
 // ===== КАРТА ДОМА =====
-// 0 = пол, 1 = обои, 2 = дверь, 3 = окно смерти, 4 = дерево,
-// 5 = окно (вид на улицу), 6 = стол, 7 = компьютер, 8 = ковёр,
-// 9 = шкаф, 10 = лампа, 11 = записка, 12 = ключ, 13 = запертая дверь
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,5,1],
@@ -238,36 +233,24 @@ const map = [
 ];
 const MAP_W = map[0].length, MAP_H = map.length;
 
-// Мебель как спрайты (фиксирована в мире, привязана к полу)
 const sprites = [
-  // === СПАЛЬНЯ (левый верх) ===
   { type: 'bed',        x: 2.5,  y: 2.5,  w: 1.6, h: 1.2 },
   { type: 'nightstand', x: 1.5,  y: 2.5,  w: 0.6, h: 0.6 },
   { type: 'lamp',       x: 1.5,  y: 2.5,  w: 0.35, h: 0.35, on: true, power: 0.7 },
-
-  // === СТОЛ С КОМПЬЮТЕРОМ (центр-верх) ===
   { type: 'table',      x: 10.5, y: 3.5,  w: 2.2, h: 1.0 },
   { type: 'computer',   x: 10.5, y: 3.0,  w: 1.1, h: 0.8 },
   { type: 'chair',      x: 10.5, y: 4.8,  w: 0.7, h: 0.7 },
   { type: 'lamp',       x: 12.2, y: 3.2,  w: 0.35, h: 0.35, on: true, power: 0.6 },
-
-  // === ГОСТИНАЯ (правый верх) ===
   { type: 'sofa',       x: 16.5, y: 3.0,  w: 2.4, h: 1.2 },
   { type: 'table',      x: 16.5, y: 5.0,  w: 1.5, h: 0.9 },
   { type: 'shelf',      x: 18.5, y: 2.0,  w: 1.0, h: 0.6 },
   { type: 'lamp',       x: 15.5, y: 2.0,  w: 0.35, h: 0.35, on: true, power: 0.6 },
-
-  // === КУХНЯ (левый низ) ===
   { type: 'stove',      x: 2.0,  y: 12.5, w: 1.0, h: 1.0 },
   { type: 'fridge',     x: 3.5,  y: 12.5, w: 1.0, h: 1.2 },
   { type: 'table',      x: 5.0,  y: 13.0, w: 1.8, h: 1.0 },
   { type: 'chair',      x: 5.0,  y: 14.3, w: 0.7, h: 0.7 },
   { type: 'lamp',       x: 3.5,  y: 11.5, w: 0.35, h: 0.35, on: true, power: 0.7 },
-
-  // === ОКНО СМЕРТИ (центр-низ) ===
   { type: 'lamp',       x: 9.5,  y: 13.0, w: 0.35, h: 0.35, on: false, power: 0.5 },
-
-  // === ВТОРАЯ СПАЛЬНЯ (правый низ) ===
   { type: 'bed',        x: 16.5, y: 13.0, w: 1.6, h: 1.2 },
   { type: 'nightstand', x: 15.3, y: 13.0, w: 0.6, h: 0.6 },
   { type: 'lamp',       x: 15.3, y: 13.0, w: 0.35, h: 0.35, on: false, power: 0.5 },
@@ -285,7 +268,6 @@ let monsterActive = false;
 let monster = null;
 let doorOpenCount = 0;
 
-// Двери
 const doors = {};
 for (let y = 0; y < MAP_H; y++) {
   for (let x = 0; x < MAP_W; x++) {
